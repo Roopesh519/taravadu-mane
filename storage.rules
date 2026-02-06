@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return request.auth != null;
+      // Note: For custom claims check, you'd need Firebase Admin SDK
+      // This is a simplified version
+    }
+    
+    // All authenticated users can read files
+    match /{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if false;  // ONLY via API routes for validation
+    }
+    
+    // Specific paths for different file types
+    match /announcements/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if request.auth.uid == userId && isAuthenticated();
+    }
+    
+    match /events/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if request.auth.uid == userId && isAuthenticated();
+    }
+    
+    match /expenses/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if false;  // ONLY via API for receipts
+    }
+    
+    match /documents/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if request.auth.uid == userId && isAuthenticated();
+    }
+    
+    match /profiles/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if request.auth.uid == userId;
+    }
+  }
+}

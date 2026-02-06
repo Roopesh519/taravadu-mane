@@ -1,0 +1,247 @@
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+export default function HomePage() {
+    return (
+        <div>
+            {/* Hero Section */}
+            <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-24 md:py-40">
+                {/* Decorative elements */}
+                <div className="absolute top-10 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-10 right-10 w-96 h-96 bg-secondary/5 rounded-full blur-3xl"></div>
+
+                <div className="container relative mx-auto px-4 text-center">
+                    <div className="max-w-4xl mx-auto">
+                        <Badge variant="secondary" className="mb-6 text-sm px-4 py-1">
+                            🕉️ Preserving Our Legacy Since Generations
+                        </Badge>
+                        <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent leading-tight">
+                            Taravadu Mane
+                            <br />
+                            <span className="text-4xl md:text-5xl">Family Portal</span>
+                        </h1>
+                        <p className="text-xl md:text-2xl text-muted-foreground mb-6 font-medium">
+                            Digital home for our Taravadu family 🙏
+                        </p>
+                        <p className="text-base md:text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
+                            Connecting generations, preserving traditions, and managing our ancestral home together.
+                            A sacred space where family bonds strengthen and heritage lives on.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link href="/login">
+                                <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow">
+                                    🔐 Member Login →
+                                </Button>
+                            </Link>
+                            <Link href="/about">
+                                <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 border-2">
+                                    Learn About Us
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Stats Section */}
+            <section className="border-y bg-muted/20 py-12">
+                <div className="container mx-auto px-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+                        <div className="text-center">
+                            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">150+</div>
+                            <div className="text-sm text-muted-foreground">Family Members</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">50+</div>
+                            <div className="text-sm text-muted-foreground">Years of Heritage</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl md:text-4xl font-bold text-accent mb-2">25+</div>
+                            <div className="text-sm text-muted-foreground">Annual Events</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">100%</div>
+                            <div className="text-sm text-muted-foreground">Transparent</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Upcoming Event Section */}
+            <section className="container mx-auto px-4 py-20">
+                <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4">🌟 Upcoming Event</h2>
+                        <p className="text-muted-foreground">Join us in celebrating our family traditions</p>
+                    </div>
+                    <Card className="border-2 border-primary/30 shadow-lg hover:shadow-xl transition-shadow">
+                        <CardHeader className="pb-4">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <CardTitle className="text-2xl md:text-3xl mb-2">Annual Family Pooja</CardTitle>
+                                    <CardDescription className="text-base">📅 March 15, 2026 • ⏰ 10:00 AM</CardDescription>
+                                </div>
+                                <Badge className="text-xs">Upcoming</Badge>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground mb-6 leading-relaxed">
+                                Join us for our annual family pooja celebrating the deity of our Taravadu Mane.
+                                All family members are warmly invited to participate in this sacred tradition that has
+                                been passed down through generations.
+                            </p>
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <Link href="/login">
+                                    <Button variant="default" className="w-full sm:w-auto">
+                                        View Full Calendar →
+                                    </Button>
+                                </Link>
+                                <Link href="/events">
+                                    <Button variant="outline" className="w-full sm:w-auto">
+                                        See All Events
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </section>
+
+            {/* About Preview Section */}
+            <section className="bg-gradient-to-b from-muted/40 to-background py-20">
+                <div className="container mx-auto px-4">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="text-center mb-8">
+                            <h2 className="text-3xl md:text-4xl font-bold mb-4">🏛️ Our Sacred Heritage</h2>
+                            <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-6"></div>
+                        </div>
+                        <p className="text-lg text-muted-foreground text-center mb-8 max-w-2xl mx-auto leading-relaxed">
+                            The Taravadu Mane has been the spiritual and cultural center of our family for generations.
+                            It houses our family deity and serves as a sacred gathering place for important rituals,
+                            joyous celebrations, and meaningful family events.
+                        </p>
+                        <div className="text-center">
+                            <Link href="/history">
+                                <Button variant="outline" size="lg" className="border-2">
+                                    📖 Read Our Full History →
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Features Section */}
+            <section className="container mx-auto px-4 py-20">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">✨ Portal Features</h2>
+                    <p className="text-muted-foreground max-w-2xl mx-auto">
+                        Everything you need to stay connected with family and manage our ancestral home
+                    </p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                    <Card className="hover:border-primary/50 transition-colors hover:shadow-lg">
+                        <CardHeader>
+                            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                                <span className="text-2xl">📢</span>
+                            </div>
+                            <CardTitle className="text-xl">Announcements</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Stay updated with family news, upcoming events, and important notices shared by admins.
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-secondary/50 transition-colors hover:shadow-lg">
+                        <CardHeader>
+                            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+                                <span className="text-2xl">💰</span>
+                            </div>
+                            <CardTitle className="text-xl">Financial Transparency</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Track contributions and expenses with complete transparency. Every rupee accounted for.
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-accent/50 transition-colors hover:shadow-lg">
+                        <CardHeader>
+                            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                                <span className="text-2xl">📁</span>
+                            </div>
+                            <CardTitle className="text-xl">Secure Documents</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Access important family documents, land records, and cherished photos in one secure place.
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-primary/50 transition-colors hover:shadow-lg">
+                        <CardHeader>
+                            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                                <span className="text-2xl">📅</span>
+                            </div>
+                            <CardTitle className="text-xl">Events Calendar</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Never miss a pooja, celebration, or family gathering with our centralized event calendar.
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-secondary/50 transition-colors hover:shadow-lg">
+                        <CardHeader>
+                            <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+                                <span className="text-2xl">👨‍👩‍👧‍👦</span>
+                            </div>
+                            <CardTitle className="text-xl">Family Directory</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Connect with family members across generations with our comprehensive directory.
+                            </p>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="hover:border-accent/50 transition-colors hover:shadow-lg">
+                        <CardHeader>
+                            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+                                <span className="text-2xl">🔐</span>
+                            </div>
+                            <CardTitle className="text-xl">Secure & Private</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                Members-only access with role-based permissions ensuring family privacy and security.
+                            </p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </section>
+
+            {/* Call to Action */}
+            <section className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 py-16">
+                <div className="container mx-auto px-4 text-center">
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4">Ready to Connect?</h2>
+                    <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+                        Join your family members on the portal and be part of our digital home
+                    </p>
+                    <Link href="/login">
+                        <Button size="lg" className="px-10 py-6 text-lg shadow-lg">
+                            Access Member Portal →
+                        </Button>
+                    </Link>
+                </div>
+            </section>
+        </div>
+    );
+}
