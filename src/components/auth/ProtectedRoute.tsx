@@ -1,18 +1,25 @@
 'use client';
 
 import { useAuth } from './AuthProvider';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { user, loading } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     useEffect(() => {
         if (!loading && !user) {
             router.push('/login');
         }
     }, [user, loading, router]);
+
+    useEffect(() => {
+        if (!loading && user?.must_change_password && pathname !== '/change-password') {
+            router.push('/change-password');
+        }
+    }, [user, loading, pathname, router]);
 
     if (loading) {
         return (

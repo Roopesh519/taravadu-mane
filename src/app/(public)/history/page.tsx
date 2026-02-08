@@ -1,3 +1,5 @@
+import { Quote } from 'lucide-react';
+
 export default function HistoryPage() {
     return (
         <div className="container mx-auto px-4 py-12">
@@ -21,8 +23,9 @@ export default function HistoryPage() {
                             worshipped and honored by countless generations. The deity serves as our
                             spiritual guardian and the focal point of our family's religious practices.
                         </p>
-                        <p className="text-sm text-muted-foreground italic">
-                            🙏 "Through devotion and unity, we honor our ancestors and bless future generations"
+                        <p className="text-sm text-muted-foreground italic flex items-start gap-2">
+                            <Quote className="h-4 w-4 text-primary" />
+                            <span>"Through devotion and unity, we honor our ancestors and bless future generations"</span>
                         </p>
                     </section>
 

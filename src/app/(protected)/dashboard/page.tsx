@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import MembersNav from '@/components/protected/MembersNav';
+import { Bell, CalendarDays, FolderOpen, ReceiptText, User, Users, Wallet } from 'lucide-react';
 
 export default function DashboardPage() {
     const { user } = useAuth();
@@ -15,7 +16,7 @@ export default function DashboardPage() {
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <h1 className="text-4xl font-bold mb-2">
-                        Namaskara, {user?.name} 🙏
+                        Namaskara, {user?.name}
                     </h1>
                     <p className="text-muted-foreground">
                         Welcome to the Taravadu Mane Family Portal
@@ -37,7 +38,7 @@ export default function DashboardPage() {
                         <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <span className="text-2xl">🟢</span>
+                                    <CalendarDays className="h-5 w-5 text-primary" />
                                     Next Event
                                 </CardTitle>
                             </CardHeader>
@@ -54,7 +55,7 @@ export default function DashboardPage() {
                         <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <span className="text-2xl">🟡</span>
+                                    <Wallet className="h-5 w-5 text-secondary" />
                                     Pending Contributions
                                 </CardTitle>
                             </CardHeader>
@@ -71,7 +72,7 @@ export default function DashboardPage() {
                         <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <span className="text-2xl">🔵</span>
+                                    <Bell className="h-5 w-5 text-primary" />
                                     Recent Announcements
                                 </CardTitle>
                             </CardHeader>
@@ -88,7 +89,7 @@ export default function DashboardPage() {
                         <Card className="hover:border-primary/50 transition-colors cursor-pointer h-full">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-lg">
-                                    <span className="text-2xl">🟣</span>
+                                    <ReceiptText className="h-5 w-5 text-accent" />
                                     Expense Summary
                                 </CardTitle>
                             </CardHeader>
@@ -109,15 +110,24 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent className="space-y-2">
                             <Link href="/profile" className="block p-3 rounded-md hover:bg-muted transition-colors">
-                                <p className="font-medium">👤 Update Profile</p>
+                                <p className="font-medium flex items-center gap-2">
+                                    <User className="h-4 w-4 text-primary" />
+                                    Update Profile
+                                </p>
                                 <p className="text-sm text-muted-foreground">Edit your personal information</p>
                             </Link>
                             <Link href="/documents" className="block p-3 rounded-md hover:bg-muted transition-colors">
-                                <p className="font-medium">📁 View Documents</p>
+                                <p className="font-medium flex items-center gap-2">
+                                    <FolderOpen className="h-4 w-4 text-primary" />
+                                    View Documents
+                                </p>
                                 <p className="text-sm text-muted-foreground">Access family documents</p>
                             </Link>
                             <Link href="/directory" className="block p-3 rounded-md hover:bg-muted transition-colors">
-                                <p className="font-medium">👨‍👩‍👧‍👦 Family Directory</p>
+                                <p className="font-medium flex items-center gap-2">
+                                    <Users className="h-4 w-4 text-primary" />
+                                    Family Directory
+                                </p>
                                 <p className="text-sm text-muted-foreground">View member contacts</p>
                             </Link>
                         </CardContent>

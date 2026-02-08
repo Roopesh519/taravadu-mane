@@ -2,6 +2,21 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import HideWhenAuthed from '@/components/auth/HideWhenAuthed';
+import {
+    BookOpen,
+    CalendarDays,
+    Clock,
+    FileText,
+    Landmark,
+    LockKeyhole,
+    Megaphone,
+    ShieldCheck,
+    Sparkles,
+    Star,
+    Users,
+    Wallet,
+} from 'lucide-react';
 
 export default function HomePage() {
     return (
@@ -15,7 +30,10 @@ export default function HomePage() {
                 <div className="container relative mx-auto px-4 text-center">
                     <div className="max-w-4xl mx-auto">
                         <Badge variant="secondary" className="mb-6 text-sm px-4 py-1">
-                            🕉️ Preserving Our Legacy Since Generations
+                            <span className="inline-flex items-center gap-2">
+                                <Sparkles className="h-4 w-4" />
+                                Preserving Our Legacy Since Generations
+                            </span>
                         </Badge>
                         <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent leading-tight">
                             Taravadu Mane
@@ -23,18 +41,21 @@ export default function HomePage() {
                             <span className="text-4xl md:text-5xl">Family Portal</span>
                         </h1>
                         <p className="text-xl md:text-2xl text-muted-foreground mb-6 font-medium">
-                            Digital home for our Taravadu family 🙏
+                            Digital home for our Taravadu family
                         </p>
                         <p className="text-base md:text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
                             Connecting generations, preserving traditions, and managing our ancestral home together.
                             A sacred space where family bonds strengthen and heritage lives on.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/login">
-                                <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow">
-                                    🔐 Member Login →
-                                </Button>
-                            </Link>
+                            <HideWhenAuthed>
+                                <Link href="/login">
+                                    <Button size="lg" className="w-full sm:w-auto text-lg px-8 py-6 shadow-lg hover:shadow-xl transition-shadow">
+                                        <LockKeyhole className="mr-2 h-5 w-5" />
+                                        Member Login →
+                                    </Button>
+                                </Link>
+                            </HideWhenAuthed>
                             <Link href="/about">
                                 <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 border-2">
                                     Learn About Us
@@ -73,7 +94,10 @@ export default function HomePage() {
             <section className="container mx-auto px-4 py-20">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">🌟 Upcoming Event</h2>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2">
+                            <Star className="h-6 w-6 text-primary" />
+                            Upcoming Event
+                        </h2>
                         <p className="text-muted-foreground">Join us in celebrating our family traditions</p>
                     </div>
                     <Card className="border-2 border-primary/30 shadow-lg hover:shadow-xl transition-shadow">
@@ -81,7 +105,17 @@ export default function HomePage() {
                             <div className="flex items-start justify-between">
                                 <div>
                                     <CardTitle className="text-2xl md:text-3xl mb-2">Annual Family Pooja</CardTitle>
-                                    <CardDescription className="text-base">📅 March 15, 2026 • ⏰ 10:00 AM</CardDescription>
+                                    <CardDescription className="text-base flex flex-wrap items-center gap-2">
+                                        <span className="inline-flex items-center gap-2">
+                                            <CalendarDays className="h-4 w-4 text-primary" />
+                                            March 15, 2026
+                                        </span>
+                                        <span className="text-muted-foreground">•</span>
+                                        <span className="inline-flex items-center gap-2">
+                                            <Clock className="h-4 w-4 text-primary" />
+                                            10:00 AM
+                                        </span>
+                                    </CardDescription>
                                 </div>
                                 <Badge className="text-xs">Upcoming</Badge>
                             </div>
@@ -93,11 +127,13 @@ export default function HomePage() {
                                 been passed down through generations.
                             </p>
                             <div className="flex flex-col sm:flex-row gap-3">
-                                <Link href="/login">
-                                    <Button variant="default" className="w-full sm:w-auto">
-                                        View Full Calendar →
-                                    </Button>
-                                </Link>
+                                <HideWhenAuthed>
+                                    <Link href="/login">
+                                        <Button variant="default" className="w-full sm:w-auto">
+                                            View Full Calendar →
+                                        </Button>
+                                    </Link>
+                                </HideWhenAuthed>
                                 <Link href="/events">
                                     <Button variant="outline" className="w-full sm:w-auto">
                                         See All Events
@@ -114,7 +150,10 @@ export default function HomePage() {
                 <div className="container mx-auto px-4">
                     <div className="max-w-4xl mx-auto">
                         <div className="text-center mb-8">
-                            <h2 className="text-3xl md:text-4xl font-bold mb-4">🏛️ Our Sacred Heritage</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2">
+                                <Landmark className="h-6 w-6 text-primary" />
+                                Our Sacred Heritage
+                            </h2>
                             <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-6"></div>
                         </div>
                         <p className="text-lg text-muted-foreground text-center mb-8 max-w-2xl mx-auto leading-relaxed">
@@ -125,7 +164,8 @@ export default function HomePage() {
                         <div className="text-center">
                             <Link href="/history">
                                 <Button variant="outline" size="lg" className="border-2">
-                                    📖 Read Our Full History →
+                                    <BookOpen className="mr-2 h-5 w-5" />
+                                    Read Our Full History →
                                 </Button>
                             </Link>
                         </div>
@@ -136,7 +176,10 @@ export default function HomePage() {
             {/* Features Section */}
             <section className="container mx-auto px-4 py-20">
                 <div className="text-center mb-12">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4">✨ Portal Features</h2>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2">
+                        <Sparkles className="h-6 w-6 text-primary" />
+                        Portal Features
+                    </h2>
                     <p className="text-muted-foreground max-w-2xl mx-auto">
                         Everything you need to stay connected with family and manage our ancestral home
                     </p>
@@ -145,7 +188,7 @@ export default function HomePage() {
                     <Card className="hover:border-primary/50 transition-colors hover:shadow-lg">
                         <CardHeader>
                             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                                <span className="text-2xl">📢</span>
+                                <Megaphone className="h-6 w-6 text-primary" />
                             </div>
                             <CardTitle className="text-xl">Announcements</CardTitle>
                         </CardHeader>
@@ -159,7 +202,7 @@ export default function HomePage() {
                     <Card className="hover:border-secondary/50 transition-colors hover:shadow-lg">
                         <CardHeader>
                             <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
-                                <span className="text-2xl">💰</span>
+                                <Wallet className="h-6 w-6 text-secondary" />
                             </div>
                             <CardTitle className="text-xl">Financial Transparency</CardTitle>
                         </CardHeader>
@@ -173,7 +216,7 @@ export default function HomePage() {
                     <Card className="hover:border-accent/50 transition-colors hover:shadow-lg">
                         <CardHeader>
                             <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
-                                <span className="text-2xl">📁</span>
+                                <FileText className="h-6 w-6 text-accent" />
                             </div>
                             <CardTitle className="text-xl">Secure Documents</CardTitle>
                         </CardHeader>
@@ -187,7 +230,7 @@ export default function HomePage() {
                     <Card className="hover:border-primary/50 transition-colors hover:shadow-lg">
                         <CardHeader>
                             <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-                                <span className="text-2xl">📅</span>
+                                <CalendarDays className="h-6 w-6 text-primary" />
                             </div>
                             <CardTitle className="text-xl">Events Calendar</CardTitle>
                         </CardHeader>
@@ -201,7 +244,7 @@ export default function HomePage() {
                     <Card className="hover:border-secondary/50 transition-colors hover:shadow-lg">
                         <CardHeader>
                             <div className="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
-                                <span className="text-2xl">👨‍👩‍👧‍👦</span>
+                                <Users className="h-6 w-6 text-secondary" />
                             </div>
                             <CardTitle className="text-xl">Family Directory</CardTitle>
                         </CardHeader>
@@ -215,7 +258,7 @@ export default function HomePage() {
                     <Card className="hover:border-accent/50 transition-colors hover:shadow-lg">
                         <CardHeader>
                             <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
-                                <span className="text-2xl">🔐</span>
+                                <ShieldCheck className="h-6 w-6 text-accent" />
                             </div>
                             <CardTitle className="text-xl">Secure & Private</CardTitle>
                         </CardHeader>
@@ -235,11 +278,13 @@ export default function HomePage() {
                     <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
                         Join your family members on the portal and be part of our digital home
                     </p>
-                    <Link href="/login">
-                        <Button size="lg" className="px-10 py-6 text-lg shadow-lg">
-                            Access Member Portal →
-                        </Button>
-                    </Link>
+                    <HideWhenAuthed>
+                        <Link href="/login">
+                            <Button size="lg" className="px-10 py-6 text-lg shadow-lg">
+                                Access Member Portal →
+                            </Button>
+                        </Link>
+                    </HideWhenAuthed>
                 </div>
             </section>
         </div>

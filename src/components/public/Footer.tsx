@@ -1,3 +1,5 @@
+import { Mail, MapPin, Phone } from 'lucide-react';
+
 export default function Footer() {
     return (
         <footer className="border-t bg-muted/40 mt-auto">
@@ -23,9 +25,18 @@ export default function Footer() {
                     <div>
                         <h4 className="font-semibold mb-3">Contact</h4>
                         <ul className="space-y-2 text-sm text-muted-foreground">
-                            <li>📍 Location: Taravadu Village</li>
-                            <li>📧 Email: contact@taravadumane.family</li>
-                            <li>📱 Phone: +91 XXXXX XXXXX</li>
+                            <li className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                <span>Location: Taravadu Village</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-primary" />
+                                <span>Email: contact@taravadumane.family</span>
+                            </li>
+                            <li className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-primary" />
+                                <span>Phone: +91 XXXXX XXXXX</span>
+                            </li>
                         </ul>
                     </div>
                 </div>

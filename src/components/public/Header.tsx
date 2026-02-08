@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
+import { Leaf } from 'lucide-react';
 
 export default function PublicHeader() {
     const { user, signOut } = useAuth();
@@ -10,8 +11,9 @@ export default function PublicHeader() {
     return (
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/" className="font-bold text-xl text-primary">
-                    🌿 Taravadu Mane
+                <Link href="/" className="font-bold text-xl text-primary flex items-center gap-2">
+                    <Leaf className="h-5 w-5" />
+                    Taravadu Mane
                 </Link>
 
                 <div className="hidden md:flex items-center gap-6">

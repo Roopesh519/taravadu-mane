@@ -8,6 +8,7 @@ export interface User {
     family_branch?: string;
     city?: string;
     photo_url?: string;
+    must_change_password?: boolean;
     created_at: Date;
 }
 
@@ -94,4 +95,18 @@ export interface AuthContextType {
     signOut: () => Promise<void>;
     hasRole: (role: string) => boolean;
     hasAnyRole: (roles: string[]) => boolean;
+    refreshUser: () => Promise<void>;
+}
+
+export interface AccessRequest {
+    id: string;
+    name: string;
+    email: string;
+    status: 'pending' | 'approved' | 'denied';
+    created_at: Date;
+    updated_at?: Date;
+    approved_at?: Date;
+    approved_by?: string;
+    denied_at?: Date;
+    denied_by?: string;
 }

@@ -5,10 +5,11 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Leaf } from 'lucide-react';
 
 export default function MembersNav() {
     const pathname = usePathname();
-    const { user, signOut } = useAuth();
+    const { user, signOut, hasRole } = useAuth();
 
     const navItems = [
         { name: 'Dashboard', href: '/dashboard' },
@@ -19,26 +20,30 @@ export default function MembersNav() {
         { name: 'Documents', href: '/documents' },
         { name: 'Directory', href: '/directory' },
         { name: 'Profile', href: '/profile' },
+        { name: 'Access Requests', href: '/admin/access-requests', adminOnly: true },
     ];
 
     return (
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/dashboard" className="font-bold text-xl text-primary">
-                    🌿 Taravadu Portal
+                <Link href="/dashboard" className="font-bold text-xl text-primary flex items-center gap-2">
+                    <Leaf className="h-5 w-5" />
+                    Taravadu Portal
                 </Link>
 
                 <div className="hidden lg:flex items-center gap-1">
-                    {navItems.map((item) => (
-                        <Link key={item.href} href={item.href}>
-                            <Button
-                                variant={pathname === item.href ? 'secondary' : 'ghost'}
-                                size="sm"
-                            >
-                                {item.name}
-                            </Button>
-                        </Link>
-                    ))}
+                    {navItems
+                        .filter((item) => !item.adminOnly || hasRole('admin'))
+                        .map((item) => (
+                            <Link key={item.href} href={item.href}>
+                                <Button
+                                    variant={pathname === item.href ? 'secondary' : 'ghost'}
+                                    size="sm"
+                                >
+                                    {item.name}
+                                </Button>
+                            </Link>
+                        ))}
                 </div>
 
                 <div className="flex items-center gap-4">

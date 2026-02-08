@@ -11,6 +11,7 @@ import {
     hasRole as checkRole,
     hasAnyRole as checkAnyRole,
 } from '@/lib/firebase/auth';
+import { auth } from '@/lib/firebase/config';
 
 const AuthContext = createContext<AuthContextType>({
     user: null,
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType>({
     signOut: async () => { },
     hasRole: () => false,
     hasAnyRole: () => false,
+    refreshUser: async () => { },
 });
 
 export function useAuth() {
@@ -73,6 +75,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return checkAnyRole(user, roles);
     };
 
+    const refreshUser = async () => {
+        const uid = auth.currentUser?.uid;
+        if (!uid) return;
+        const currentUser = await getUserData(uid);
+        setUser(currentUser);
+    };
+
     const value = {
         user,
         loading,
@@ -80,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         hasRole,
         hasAnyRole,
+        refreshUser,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -3,6 +3,7 @@ import {
     signOut as firebaseSignOut,
     sendPasswordResetEmail,
     onAuthStateChanged,
+    updatePassword,
     User as FirebaseUser
 } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -32,6 +33,16 @@ export async function resetPassword(email: string): Promise<void> {
 }
 
 /**
+ * Update current user password
+ */
+export async function changePassword(newPassword: string): Promise<void> {
+    if (!auth.currentUser) {
+        throw new Error('No authenticated user.');
+    }
+    await updatePassword(auth.currentUser, newPassword);
+}
+
+/**
  * Get user data from Firestore
  */
 export async function getUserData(uid: string): Promise<User | null> {
@@ -48,6 +59,7 @@ export async function getUserData(uid: string): Promise<User | null> {
                 family_branch: data.family_branch,
                 city: data.city,
                 photo_url: data.photo_url,
+                must_change_password: data.must_change_password || false,
                 created_at: data.created_at?.toDate(),
             } as User;
         }

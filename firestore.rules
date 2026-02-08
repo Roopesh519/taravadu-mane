@@ -72,5 +72,11 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
     }
+
+    // Access Requests (public create, admin review)
+    match /access_requests/{doc} {
+      allow create: if request.resource.data.status == 'pending';
+      allow read, update, delete: if isAdmin();
+    }
   }
 }

@@ -1,4 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, Mail, MapPin, Phone } from 'lucide-react';
+import HideWhenAuthed from '@/components/auth/HideWhenAuthed';
 
 export default function ContactPage() {
     return (
@@ -12,7 +14,10 @@ export default function ContactPage() {
                 <div className="grid md:grid-cols-2 gap-6">
                     <Card>
                         <CardHeader>
-                            <CardTitle>📍 Location</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <MapPin className="h-5 w-5 text-primary" />
+                                Location
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">
@@ -25,7 +30,10 @@ export default function ContactPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>📧 Email</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <Mail className="h-5 w-5 text-primary" />
+                                Email
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">
@@ -37,7 +45,10 @@ export default function ContactPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>📱 Phone</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <Phone className="h-5 w-5 text-primary" />
+                                Phone
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">
@@ -49,7 +60,10 @@ export default function ContactPage() {
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>⏰ Committee Hours</CardTitle>
+                            <CardTitle className="flex items-center gap-2">
+                                <Clock className="h-5 w-5 text-primary" />
+                                Committee Hours
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">
@@ -70,12 +84,14 @@ export default function ContactPage() {
                         <p className="text-muted-foreground mb-4">
                             Access more features and connect with family by logging into the member portal.
                         </p>
-                        <a
-                            href="/login"
-                            className="text-primary hover:underline font-medium"
-                        >
-                            Login to Member Portal →
-                        </a>
+                        <HideWhenAuthed>
+                            <a
+                                href="/login"
+                                className="text-primary hover:underline font-medium"
+                            >
+                                Login to Member Portal →
+                            </a>
+                        </HideWhenAuthed>
                     </CardContent>
                 </Card>
             </div>

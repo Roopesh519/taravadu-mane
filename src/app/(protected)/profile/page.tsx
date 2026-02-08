@@ -4,6 +4,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import MembersNav from '@/components/protected/MembersNav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Lightbulb } from 'lucide-react';
 
 export default function ProfilePage() {
     const { user } = useAuth();
@@ -62,8 +63,9 @@ export default function ProfilePage() {
                     </Card>
 
                     <div className="mt-6 p-4 bg-muted/40 rounded-lg border">
-                        <p className="text-sm text-muted-foreground">
-                            💡 <strong>Note:</strong> To update your profile information, please contact an admin.
+                        <p className="text-sm text-muted-foreground flex items-start gap-2">
+                            <Lightbulb className="h-4 w-4 text-primary mt-0.5" />
+                            <span><strong>Note:</strong> To update your profile information, please contact an admin.</span>
                         </p>
                     </div>
                 </div>

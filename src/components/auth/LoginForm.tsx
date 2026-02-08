@@ -13,6 +13,11 @@ export default function LoginForm() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [requestName, setRequestName] = useState('');
+    const [requestEmail, setRequestEmail] = useState('');
+    const [requestError, setRequestError] = useState('');
+    const [requestSuccess, setRequestSuccess] = useState('');
+    const [requestLoading, setRequestLoading] = useState(false);
     const { signIn } = useAuth();
     const router = useRouter();
 
@@ -25,9 +30,38 @@ export default function LoginForm() {
             await signIn(email, password);
             router.push('/dashboard');
         } catch (err: any) {
-            setError(err.message || 'Failed to sign in. Please check your credentials.');
+            const message = err.message || 'Failed to sign in. Please check your credentials.';
+            setError(message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleRequestAccess = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setRequestError('');
+        setRequestSuccess('');
+        setRequestLoading(true);
+
+        try {
+            const res = await fetch('/api/access-requests', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: requestName, email: requestEmail }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to submit request.');
+            }
+
+            setRequestSuccess('Request submitted. An admin will review your access soon.');
+            setRequestName('');
+            setRequestEmail('');
+        } catch (err: any) {
+            setRequestError(err.message || 'Failed to submit request.');
+        } finally {
+            setRequestLoading(false);
         }
     };
 
@@ -87,6 +121,52 @@ export default function LoginForm() {
                     </button>
                 </CardFooter>
             </form>
+
+            <div className="border-t px-6 py-5">
+                <h3 className="font-semibold text-lg mb-1 text-center">Request Member Access</h3>
+                <p className="text-sm text-muted-foreground text-center mb-4">
+                    Not registered yet? Submit a request for admin approval.
+                </p>
+                <form onSubmit={handleRequestAccess} className="space-y-3">
+                    {requestError && (
+                        <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
+                            <p className="text-sm text-destructive">{requestError}</p>
+                        </div>
+                    )}
+                    {requestSuccess && (
+                        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                            <p className="text-sm text-emerald-600">{requestSuccess}</p>
+                        </div>
+                    )}
+                    <div className="space-y-2">
+                        <Label htmlFor="requestName">Full Name</Label>
+                        <Input
+                            id="requestName"
+                            type="text"
+                            placeholder="Your name"
+                            value={requestName}
+                            onChange={(e) => setRequestName(e.target.value)}
+                            required
+                            disabled={requestLoading}
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="requestEmail">Email</Label>
+                        <Input
+                            id="requestEmail"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            value={requestEmail}
+                            onChange={(e) => setRequestEmail(e.target.value)}
+                            required
+                            disabled={requestLoading}
+                        />
+                    </div>
+                    <Button type="submit" variant="outline" className="w-full" disabled={requestLoading}>
+                        {requestLoading ? 'Submitting...' : 'Request Access'}
+                    </Button>
+                </form>
+            </div>
         </Card>
     );
 }

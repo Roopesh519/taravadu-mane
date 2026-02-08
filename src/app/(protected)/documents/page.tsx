@@ -2,6 +2,7 @@
 
 import MembersNav from '@/components/protected/MembersNav';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Camera, FileText, Landmark, NotebookPen } from 'lucide-react';
 
 export default function DocumentsPage() {
     return (
@@ -16,7 +17,7 @@ export default function DocumentsPage() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card className="hover:border-primary/50 transition-colors cursor-pointer">
                         <CardHeader>
-                            <div className="text-4xl mb-2">📄</div>
+                            <FileText className="h-10 w-10 text-primary mb-2" />
                             <CardTitle className="text-lg">Land Documents</CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -26,7 +27,7 @@ export default function DocumentsPage() {
 
                     <Card className="hover:border-primary/50 transition-colors cursor-pointer">
                         <CardHeader>
-                            <div className="text-4xl mb-2">🕉️</div>
+                            <Landmark className="h-10 w-10 text-primary mb-2" />
                             <CardTitle className="text-lg">Temple Documents</CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -36,7 +37,7 @@ export default function DocumentsPage() {
 
                     <Card className="hover:border-primary/50 transition-colors cursor-pointer">
                         <CardHeader>
-                            <div className="text-4xl mb-2">📝</div>
+                            <NotebookPen className="h-10 w-10 text-primary mb-2" />
                             <CardTitle className="text-lg">Meeting Minutes</CardTitle>
                         </CardHeader>
                         <CardContent>
@@ -46,7 +47,7 @@ export default function DocumentsPage() {
 
                     <Card className="hover:border-primary/50 transition-colors cursor-pointer">
                         <CardHeader>
-                            <div className="text-4xl mb-2">📸</div>
+                            <Camera className="h-10 w-10 text-primary mb-2" />
                             <CardTitle className="text-lg">Photos Archive</CardTitle>
                         </CardHeader>
                         <CardContent>
