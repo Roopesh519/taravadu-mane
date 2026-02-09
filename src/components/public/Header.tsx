@@ -1,12 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
-import { Leaf } from 'lucide-react';
+import { Leaf, Menu, X } from 'lucide-react';
 
 export default function PublicHeader() {
     const { user, signOut } = useAuth();
+    const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
         <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -34,7 +36,7 @@ export default function PublicHeader() {
                     </Link>
                 </div>
 
-                <div>
+                <div className="flex items-center gap-2">
                     {user ? (
                         <div className="flex items-center gap-4">
                             <Link href="/dashboard">
@@ -49,8 +51,59 @@ export default function PublicHeader() {
                             <Button size="sm">Member Login</Button>
                         </Link>
                     )}
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="md:hidden"
+                        aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                        onClick={() => setMobileOpen((open) => !open)}
+                    >
+                        {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                    </Button>
                 </div>
             </nav>
+
+            {mobileOpen && (
+                <div className="md:hidden border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+                    <div className="container mx-auto px-4 py-4 flex flex-col gap-3">
+                        <Link
+                            href="/"
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                        >
+                            Home
+                        </Link>
+                        <Link
+                            href="/about"
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                        >
+                            About
+                        </Link>
+                        <Link
+                            href="/history"
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                        >
+                            History
+                        </Link>
+                        <Link
+                            href="/gallery"
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                        >
+                            Gallery
+                        </Link>
+                        <Link
+                            href="/contact"
+                            className="text-sm font-medium hover:text-primary transition-colors"
+                            onClick={() => setMobileOpen(false)}
+                        >
+                            Contact
+                        </Link>
+                    </div>
+                </div>
+            )}
         </header>
     );
 }
