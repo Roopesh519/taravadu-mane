@@ -86,8 +86,11 @@ export default function DashboardPage() {
             const pendingTotal = pendingContributions.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
             const expenseTotal = monthlyExpenses.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
 
-            setRecentAnnouncement(announcementsData[0] || null);
-            setNextEvent(upcomingData[0] || null);
+            const announcements = announcementsData as Announcement[];
+            const upcoming = upcomingData as Event[];
+
+            setRecentAnnouncement((announcements[0] || null) as Announcement | null);
+            setNextEvent((upcoming[0] || null) as Event | null);
             setPendingContributionTotal(pendingTotal);
             setExpenseMonthTotal(expenseTotal);
             setStats({

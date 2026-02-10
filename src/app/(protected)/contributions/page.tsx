@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import MembersNav from '@/components/protected/MembersNav';
 import RoleGuard from '@/components/auth/RoleGuard';
 import { Badge } from '@/components/ui/badge';
@@ -59,7 +59,7 @@ export default function ContributionsPage() {
         payment_mode: '',
     });
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         setError('');
         const constraints = [];
@@ -76,16 +76,16 @@ export default function ContributionsPage() {
         if (isFinanceAdmin) {
             const people = await getDocuments<User>('users', [orderBy('name', 'asc')]);
             setUsers(people);
-            if (!form.user_id && people.length > 0) {
-                setForm((prev) => ({ ...prev, user_id: people[0].id }));
+            if (people.length > 0) {
+                setForm((prev) => (prev.user_id ? prev : { ...prev, user_id: people[0].id }));
             }
         }
         setLoading(false);
-    };
+    }, [currentYear, isFinanceAdmin, user?.id]);
 
     useEffect(() => {
         fetchData();
-    }, [isFinanceAdmin, user?.id]);
+    }, [fetchData]);
 
     const userMap = useMemo(() => {
         const map = new Map<string, User>();
