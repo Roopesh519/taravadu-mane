@@ -17,9 +17,11 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body className={inter.className}>
+            <body className={`${inter.className} h-screen overflow-hidden`}>
                 <AuthProvider>
-                    {children}
+                    <div id="app-scroll" className="h-screen overflow-y-auto app-scroll">
+                        {children}
+                    </div>
                 </AuthProvider>
             </body>
         </html>

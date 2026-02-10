@@ -1,8 +1,13 @@
+"use client";
+
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import HideWhenAuthed from '@/components/auth/HideWhenAuthed';
+import { getRecentAnnouncements, getUpcomingEvents } from '@/lib/firebase/db';
+import { Announcement, Event } from '@/lib/types';
 import {
     BookOpen,
     CalendarDays,
@@ -18,7 +23,68 @@ import {
     Wallet,
 } from 'lucide-react';
 
+function parseDate(value: any): Date | null {
+    if (!value) return null;
+    if (value instanceof Date) return value;
+    if (value.seconds) return new Date(value.seconds * 1000);
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatDate(value: any) {
+    const date = parseDate(value);
+    return date ? date.toLocaleString() : '-';
+}
+
+function formatEventDate(value: any) {
+    const date = parseDate(value);
+    if (!date) return { dateLabel: 'Date TBA', timeLabel: 'Time TBA' };
+    return {
+        dateLabel: date.toLocaleDateString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+        }),
+        timeLabel: date.toLocaleTimeString(undefined, {
+            hour: 'numeric',
+            minute: '2-digit',
+        }),
+    };
+}
+
+function truncate(text: string, maxLength: number) {
+    if (text.length <= maxLength) return text;
+    return `${text.slice(0, maxLength).trim()}...`;
+}
+
 export default function HomePage() {
+    const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+    const [events, setEvents] = useState<Event[]>([]);
+    const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+    const [eventsLoading, setEventsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchAnnouncements = async () => {
+            setAnnouncementsLoading(true);
+            const data = await getRecentAnnouncements(3);
+            setAnnouncements(data as Announcement[]);
+            setAnnouncementsLoading(false);
+        };
+
+        const fetchEvents = async () => {
+            setEventsLoading(true);
+            const data = await getUpcomingEvents(3);
+            setEvents(data as Event[]);
+            setEventsLoading(false);
+        };
+
+        fetchAnnouncements();
+        fetchEvents();
+    }, []);
+
+    const upcomingEvent = useMemo(() => events[0] || null, [events]);
+    const { dateLabel, timeLabel } = formatEventDate(upcomingEvent?.event_date);
+
     return (
         <div>
             {/* Hero Section */}
@@ -100,48 +166,135 @@ export default function HomePage() {
                         </h2>
                         <p className="text-muted-foreground">Join us in celebrating our family traditions</p>
                     </div>
-                    <Card className="border-2 border-primary/30 shadow-lg hover:shadow-xl transition-shadow">
-                        <CardHeader className="pb-4">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <CardTitle className="text-2xl md:text-3xl mb-2">Annual Family Pooja</CardTitle>
-                                    <CardDescription className="text-base flex flex-wrap items-center gap-2">
-                                        <span className="inline-flex items-center gap-2">
-                                            <CalendarDays className="h-4 w-4 text-primary" />
-                                            March 15, 2026
-                                        </span>
-                                        <span className="text-muted-foreground">•</span>
-                                        <span className="inline-flex items-center gap-2">
-                                            <Clock className="h-4 w-4 text-primary" />
-                                            10:00 AM
-                                        </span>
-                                    </CardDescription>
+                    {eventsLoading ? (
+                        <Card className="border-2 border-primary/30 shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="text-2xl">Loading upcoming event...</CardTitle>
+                                <CardDescription>Fetching the latest schedule.</CardDescription>
+                            </CardHeader>
+                        </Card>
+                    ) : upcomingEvent ? (
+                        <Card className="border-2 border-primary/30 shadow-lg hover:shadow-xl transition-shadow">
+                            <CardHeader className="pb-4">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <CardTitle className="text-2xl md:text-3xl mb-2">{upcomingEvent.title}</CardTitle>
+                                        <CardDescription className="text-base flex flex-wrap items-center gap-2">
+                                            <span className="inline-flex items-center gap-2">
+                                                <CalendarDays className="h-4 w-4 text-primary" />
+                                                {dateLabel}
+                                            </span>
+                                            <span className="text-muted-foreground">•</span>
+                                            <span className="inline-flex items-center gap-2">
+                                                <Clock className="h-4 w-4 text-primary" />
+                                                {timeLabel}
+                                            </span>
+                                        </CardDescription>
+                                    </div>
+                                    <Badge className="text-xs">Upcoming</Badge>
                                 </div>
-                                <Badge className="text-xs">Upcoming</Badge>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground mb-6 leading-relaxed">
-                                Join us for our annual family pooja celebrating the deity of our Taravadu Mane.
-                                All family members are warmly invited to participate in this sacred tradition that has
-                                been passed down through generations.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <HideWhenAuthed>
-                                    <Link href="/login">
-                                        <Button variant="default" className="w-full sm:w-auto">
-                                            View Full Calendar →
+                            </CardHeader>
+                            <CardContent>
+                                <p className="text-muted-foreground mb-6 leading-relaxed">
+                                    {upcomingEvent.description}
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <HideWhenAuthed>
+                                        <Link href="/login">
+                                            <Button variant="default" className="w-full sm:w-auto">
+                                                View Full Calendar →
+                                            </Button>
+                                        </Link>
+                                    </HideWhenAuthed>
+                                    <Link href="/events">
+                                        <Button variant="outline" className="w-full sm:w-auto">
+                                            See All Events
                                         </Button>
                                     </Link>
-                                </HideWhenAuthed>
-                                <Link href="/events">
-                                    <Button variant="outline" className="w-full sm:w-auto">
-                                        See All Events
-                                    </Button>
-                                </Link>
-                            </div>
-                        </CardContent>
-                    </Card>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <Card className="border-2 border-primary/30 shadow-lg">
+                            <CardHeader>
+                                <CardTitle className="text-2xl">No upcoming events yet</CardTitle>
+                                <CardDescription>Check back soon for the next family gathering.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <HideWhenAuthed>
+                                        <Link href="/login">
+                                            <Button variant="default" className="w-full sm:w-auto">
+                                                View Full Calendar →
+                                            </Button>
+                                        </Link>
+                                    </HideWhenAuthed>
+                                    <Link href="/events">
+                                        <Button variant="outline" className="w-full sm:w-auto">
+                                            See All Events
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+                </div>
+            </section>
+
+            {/* Announcements Section */}
+            <section className="container mx-auto px-4 pb-20">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-10">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4 flex items-center justify-center gap-2">
+                            <Megaphone className="h-6 w-6 text-primary" />
+                            Latest Announcements
+                        </h2>
+                        <p className="text-muted-foreground">
+                            Important notices and family updates shared by admins
+                        </p>
+                    </div>
+                    {announcementsLoading ? (
+                        <Card className="border border-primary/10">
+                            <CardHeader>
+                                <CardTitle className="text-xl">Loading announcements...</CardTitle>
+                                <CardDescription>Fetching the latest updates.</CardDescription>
+                            </CardHeader>
+                        </Card>
+                    ) : announcements.length === 0 ? (
+                        <Card className="border border-primary/10">
+                            <CardHeader>
+                                <CardTitle className="text-xl">No announcements yet</CardTitle>
+                                <CardDescription>Admins will post updates here as needed.</CardDescription>
+                            </CardHeader>
+                        </Card>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {announcements.map((announcement) => (
+                                <Card key={announcement.id} className="hover:border-primary/40 transition-colors">
+                                    <CardHeader>
+                                        <CardTitle className="text-lg">{announcement.title}</CardTitle>
+                                        <CardDescription>
+                                            Published {formatDate(announcement.created_at)}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                            {truncate(announcement.content, 160)}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center mt-8">
+                        <HideWhenAuthed>
+                            <Link href="/login">
+                                <Button variant="outline" className="w-full sm:w-auto">
+                                    Member Login to View All →
+                                </Button>
+                            </Link>
+                        </HideWhenAuthed>
+                    </div>
                 </div>
             </section>
 

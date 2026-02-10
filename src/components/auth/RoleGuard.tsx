@@ -12,7 +12,10 @@ export default function RoleGuard({ children, allowedRoles, fallback }: RoleGuar
     const { user, hasAnyRole } = useAuth();
 
     if (!user || !hasAnyRole(allowedRoles)) {
-        return fallback || (
+        if (fallback !== undefined) {
+            return fallback;
+        }
+        return (
             <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
                 <p className="text-destructive font-medium">Access Denied</p>
                 <p className="text-sm text-muted-foreground">
