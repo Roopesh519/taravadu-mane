@@ -40,6 +40,7 @@ export default function ContributionsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const currentYear = new Date().getFullYear();
     const [form, setForm] = useState({
@@ -130,6 +131,7 @@ export default function ContributionsPage() {
                 paid_on: '',
                 payment_mode: '',
             });
+            setIsCreateModalOpen(false);
             await fetchData();
         } catch (err: any) {
             setError(err.message || 'Failed to create contribution.');
@@ -216,16 +218,18 @@ export default function ContributionsPage() {
         <>
             <MembersNav />
             <div className="container mx-auto px-4 py-8">
-                <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-4xl font-bold mb-2">Contributions</h1>
                         <p className="text-muted-foreground">
                             Track yearly contributions for Taravadu Mane maintenance
                         </p>
                     </div>
-                    <Button variant="outline" onClick={fetchData} disabled={loading}>
-                        Refresh
-                    </Button>
+                    <div className="flex w-full sm:w-auto items-center gap-2">
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={fetchData} disabled={loading}>
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
 
                 {error && (
@@ -233,84 +237,18 @@ export default function ContributionsPage() {
                         <p className="text-sm text-destructive">{error}</p>
                     </div>
                 )}
-
                 <RoleGuard allowedRoles={['admin', 'treasurer']} fallback={null}>
-                    <Card className="mb-8">
-                        <CardHeader>
-                            <CardTitle>Record Contribution</CardTitle>
-                            <CardDescription>Log payments and yearly contributions.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="contribution-user">Member</Label>
-                                <select
-                                    id="contribution-user"
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    value={form.user_id}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, user_id: e.target.value }))}
-                                >
-                                    {users.map((person) => (
-                                        <option key={person.id} value={person.id}>
-                                            {person.name} ({person.email})
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="contribution-year">Year</Label>
-                                <Input
-                                    id="contribution-year"
-                                    type="number"
-                                    value={form.year}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, year: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="contribution-amount">Amount</Label>
-                                <Input
-                                    id="contribution-amount"
-                                    type="number"
-                                    value={form.amount}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="contribution-status">Status</Label>
-                                <select
-                                    id="contribution-status"
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    value={form.status}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
-                                >
-                                    <option value="pending">Pending</option>
-                                    <option value="paid">Paid</option>
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="contribution-paid-on">Paid On</Label>
-                                <Input
-                                    id="contribution-paid-on"
-                                    type="date"
-                                    value={form.paid_on}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, paid_on: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="contribution-payment-mode">Payment Mode</Label>
-                                <Input
-                                    id="contribution-payment-mode"
-                                    value={form.payment_mode}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, payment_mode: e.target.value }))}
-                                    placeholder="UPI, Cash, Bank Transfer..."
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <Button onClick={handleCreate} disabled={actionLoading}>
-                                    Save Contribution
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <div className="mb-6">
+                        <Button
+                            className="w-full sm:w-auto"
+                            onClick={() => {
+                                setError('');
+                                setIsCreateModalOpen(true);
+                            }}
+                        >
+                            Record Contribution
+                        </Button>
+                    </div>
                 </RoleGuard>
 
                 {loading ? (
@@ -458,6 +396,104 @@ export default function ContributionsPage() {
                     </div>
                 )}
             </div>
+            <RoleGuard allowedRoles={['admin', 'treasurer']} fallback={null}>
+                {isCreateModalOpen && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 p-3 sm:p-4"
+                        onClick={() => {
+                            if (!actionLoading) setIsCreateModalOpen(false);
+                        }}
+                    >
+                        <Card
+                            className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mt-4 sm:mt-0"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <CardHeader>
+                                <CardTitle>Record Contribution</CardTitle>
+                                <CardDescription>Log payments and yearly contributions.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="contribution-user">Member</Label>
+                                    <select
+                                        id="contribution-user"
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={form.user_id}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, user_id: e.target.value }))}
+                                    >
+                                        {users.map((person) => (
+                                            <option key={person.id} value={person.id}>
+                                                {person.name} ({person.email})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="contribution-year">Year</Label>
+                                    <Input
+                                        id="contribution-year"
+                                        type="number"
+                                        value={form.year}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, year: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="contribution-amount">Amount</Label>
+                                    <Input
+                                        id="contribution-amount"
+                                        type="number"
+                                        value={form.amount}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="contribution-status">Status</Label>
+                                    <select
+                                        id="contribution-status"
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={form.status}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
+                                    >
+                                        <option value="pending">Pending</option>
+                                        <option value="paid">Paid</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="contribution-paid-on">Paid On</Label>
+                                    <Input
+                                        id="contribution-paid-on"
+                                        type="date"
+                                        value={form.paid_on}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, paid_on: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="contribution-payment-mode">Payment Mode</Label>
+                                    <Input
+                                        id="contribution-payment-mode"
+                                        value={form.payment_mode}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, payment_mode: e.target.value }))}
+                                        placeholder="UPI, Cash, Bank Transfer..."
+                                    />
+                                </div>
+                                <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-2">
+                                    <Button
+                                        className="w-full sm:w-auto"
+                                        variant="outline"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        disabled={actionLoading}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button className="w-full sm:w-auto" onClick={handleCreate} disabled={actionLoading}>
+                                        Save Contribution
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+            </RoleGuard>
         </>
     );
 }

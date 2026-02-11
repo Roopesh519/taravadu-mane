@@ -26,6 +26,7 @@ export default function AnnouncementsPage() {
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [form, setForm] = useState({ title: '', content: '' });
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState({ title: '', content: '' });
 
@@ -63,6 +64,7 @@ export default function AnnouncementsPage() {
             setError('Failed to create announcement.');
         } else {
             setForm({ title: '', content: '' });
+            setIsCreateModalOpen(false);
             await fetchAnnouncements();
         }
         setActionLoading(false);
@@ -110,16 +112,18 @@ export default function AnnouncementsPage() {
         <>
             <MembersNav />
             <div className="container mx-auto px-4 py-8">
-                <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-4xl font-bold mb-2">Announcements</h1>
                         <p className="text-muted-foreground">
                             Stay updated with family news and important notices
                         </p>
                     </div>
-                    <Button variant="outline" onClick={fetchAnnouncements} disabled={loading}>
-                        Refresh
-                    </Button>
+                    <div className="flex w-full sm:w-auto items-center gap-2">
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={fetchAnnouncements} disabled={loading}>
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
 
                 {error && (
@@ -127,38 +131,18 @@ export default function AnnouncementsPage() {
                         <p className="text-sm text-destructive">{error}</p>
                     </div>
                 )}
-
                 <RoleGuard allowedRoles={['admin']} fallback={null}>
-                    <Card className="mb-8">
-                        <CardHeader>
-                            <CardTitle>Create Announcement</CardTitle>
-                            <CardDescription>Share important updates with the family.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="announcement-title">Title</Label>
-                                <Input
-                                    id="announcement-title"
-                                    value={form.title}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                                    placeholder="Announcement title"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="announcement-content">Content</Label>
-                                <textarea
-                                    id="announcement-content"
-                                    value={form.content}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
-                                    className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    placeholder="Write the announcement details..."
-                                />
-                            </div>
-                            <Button onClick={handleCreate} disabled={actionLoading}>
-                                Publish
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    <div className="mb-6">
+                        <Button
+                            className="w-full sm:w-auto"
+                            onClick={() => {
+                                setError('');
+                                setIsCreateModalOpen(true);
+                            }}
+                        >
+                            Create Announcement
+                        </Button>
+                    </div>
                 </RoleGuard>
 
                 {loading ? (
@@ -249,6 +233,56 @@ export default function AnnouncementsPage() {
                     </div>
                 )}
             </div>
+            <RoleGuard allowedRoles={['admin']} fallback={null}>
+                {isCreateModalOpen && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                        onClick={() => {
+                            if (!actionLoading) setIsCreateModalOpen(false);
+                        }}
+                    >
+                        <Card className="w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
+                            <CardHeader>
+                                <CardTitle>Create Announcement</CardTitle>
+                                <CardDescription>Share important updates with the family.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="announcement-title">Title</Label>
+                                    <Input
+                                        id="announcement-title"
+                                        value={form.title}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                                        placeholder="Announcement title"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="announcement-content">Content</Label>
+                                    <textarea
+                                        id="announcement-content"
+                                        value={form.content}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
+                                        className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        placeholder="Write the announcement details..."
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        disabled={actionLoading}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={handleCreate} disabled={actionLoading}>
+                                        Publish
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+            </RoleGuard>
         </>
     );
 }

@@ -41,6 +41,7 @@ export default function ExpensesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState({
         title: '',
@@ -108,6 +109,7 @@ export default function ExpensesPage() {
                 expense_date: '',
                 receipt_url: '',
             });
+            setIsCreateModalOpen(false);
             await fetchExpenses();
         } catch (err: any) {
             setError(err.message || 'Failed to create expense.');
@@ -194,16 +196,18 @@ export default function ExpensesPage() {
         <>
             <MembersNav />
             <div className="container mx-auto px-4 py-8">
-                <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-4xl font-bold mb-2">Expenses</h1>
                         <p className="text-muted-foreground">
                             Transparent tracking of Taravadu Mane expenses
                         </p>
                     </div>
-                    <Button variant="outline" onClick={fetchExpenses} disabled={loading}>
-                        Refresh
-                    </Button>
+                    <div className="flex w-full sm:w-auto items-center gap-2">
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={fetchExpenses} disabled={loading}>
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
 
                 {error && (
@@ -211,80 +215,18 @@ export default function ExpensesPage() {
                         <p className="text-sm text-destructive">{error}</p>
                     </div>
                 )}
-
                 <RoleGuard allowedRoles={['admin', 'treasurer']} fallback={null}>
-                    <Card className="mb-8">
-                        <CardHeader>
-                            <CardTitle>Record Expense</CardTitle>
-                            <CardDescription>Log temple and maintenance expenses.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="expense-title">Title</Label>
-                                <Input
-                                    id="expense-title"
-                                    value={form.title}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="expense-category">Category</Label>
-                                <select
-                                    id="expense-category"
-                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    value={form.category}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
-                                >
-                                    {expenseCategories.map((category) => (
-                                        <option key={category} value={category}>
-                                            {category}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="expense-amount">Amount</Label>
-                                <Input
-                                    id="expense-amount"
-                                    type="number"
-                                    value={form.amount}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="expense-date">Expense Date</Label>
-                                <Input
-                                    id="expense-date"
-                                    type="date"
-                                    value={form.expense_date}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, expense_date: e.target.value }))}
-                                />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="expense-description">Description</Label>
-                                <textarea
-                                    id="expense-description"
-                                    value={form.description}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                                    className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor="expense-receipt">Receipt URL</Label>
-                                <Input
-                                    id="expense-receipt"
-                                    value={form.receipt_url}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, receipt_url: e.target.value }))}
-                                    placeholder="Optional link to receipt"
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <Button onClick={handleCreate} disabled={actionLoading}>
-                                    Save Expense
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <div className="mb-6">
+                        <Button
+                            className="w-full sm:w-auto"
+                            onClick={() => {
+                                setError('');
+                                setIsCreateModalOpen(true);
+                            }}
+                        >
+                            Record Expense
+                        </Button>
+                    </div>
                 </RoleGuard>
 
                 {loading ? (
@@ -429,6 +371,100 @@ export default function ExpensesPage() {
                     </div>
                 )}
             </div>
+            <RoleGuard allowedRoles={['admin', 'treasurer']} fallback={null}>
+                {isCreateModalOpen && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 p-3 sm:p-4"
+                        onClick={() => {
+                            if (!actionLoading) setIsCreateModalOpen(false);
+                        }}
+                    >
+                        <Card
+                            className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mt-4 sm:mt-0"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <CardHeader>
+                                <CardTitle>Record Expense</CardTitle>
+                                <CardDescription>Log temple and maintenance expenses.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="grid md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="expense-title">Title</Label>
+                                    <Input
+                                        id="expense-title"
+                                        value={form.title}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="expense-category">Category</Label>
+                                    <select
+                                        id="expense-category"
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={form.category}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                                    >
+                                        {expenseCategories.map((category) => (
+                                            <option key={category} value={category}>
+                                                {category}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="expense-amount">Amount</Label>
+                                    <Input
+                                        id="expense-amount"
+                                        type="number"
+                                        value={form.amount}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="expense-date">Expense Date</Label>
+                                    <Input
+                                        id="expense-date"
+                                        type="date"
+                                        value={form.expense_date}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, expense_date: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="expense-description">Description</Label>
+                                    <textarea
+                                        id="expense-description"
+                                        value={form.description}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                                        className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                    />
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="expense-receipt">Receipt URL</Label>
+                                    <Input
+                                        id="expense-receipt"
+                                        value={form.receipt_url}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, receipt_url: e.target.value }))}
+                                        placeholder="Optional link to receipt"
+                                    />
+                                </div>
+                                <div className="md:col-span-2 flex flex-col-reverse sm:flex-row justify-end gap-2">
+                                    <Button
+                                        className="w-full sm:w-auto"
+                                        variant="outline"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        disabled={actionLoading}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button className="w-full sm:w-auto" onClick={handleCreate} disabled={actionLoading}>
+                                        Save Expense
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+            </RoleGuard>
         </>
     );
 }

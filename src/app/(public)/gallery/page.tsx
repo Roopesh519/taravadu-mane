@@ -47,6 +47,7 @@ export default function GalleryPage() {
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [title, setTitle] = useState('');
     const [files, setFiles] = useState<File[]>([]);
 
@@ -117,6 +118,7 @@ export default function GalleryPage() {
 
             setTitle('');
             setFiles([]);
+            setIsUploadModalOpen(false);
             const input = document.getElementById('gallery-images') as HTMLInputElement | null;
             if (input) input.value = '';
             await fetchPhotos();
@@ -135,60 +137,35 @@ export default function GalleryPage() {
     return (
         <div className="container mx-auto px-4 py-12">
             <div className="max-w-6xl mx-auto">
-                <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-4xl font-bold mb-2">Photo Gallery</h1>
                         <p className="text-muted-foreground max-w-2xl">
                             Memories from our Taravadu Mane: rituals, celebrations, and family moments.
                         </p>
                     </div>
-                    <Button variant="outline" onClick={fetchPhotos} disabled={loading || uploading}>
-                        Refresh
-                    </Button>
+                    <div className="flex w-full sm:w-auto items-center gap-2">
+                        {isAdmin && (
+                            <Button
+                                className="w-full sm:w-auto"
+                                onClick={() => {
+                                    setError('');
+                                    setIsUploadModalOpen(true);
+                                }}
+                            >
+                                Upload Gallery Photos
+                            </Button>
+                        )}
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={fetchPhotos} disabled={loading || uploading}>
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
 
                 {error && (
                     <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-md">
                         <p className="text-sm text-destructive">{error}</p>
                     </div>
-                )}
-
-                {isAdmin && (
-                    <Card className="mb-8">
-                        <CardHeader>
-                            <CardTitle>Upload Gallery Photos</CardTitle>
-                            <CardDescription>
-                                Images are uploaded to Cloudinary with automatic optimization.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="gallery-title">Title (optional)</Label>
-                                <Input
-                                    id="gallery-title"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    placeholder="Festival 2026"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="gallery-images">Images</Label>
-                                <Input
-                                    id="gallery-images"
-                                    type="file"
-                                    accept="image/*"
-                                    multiple
-                                    onChange={(e) => setFiles(Array.from(e.target.files || []))}
-                                />
-                                <p className="text-xs text-muted-foreground">
-                                    Up to 15MB per image. You can select multiple files.
-                                </p>
-                            </div>
-                            <Button onClick={handleUpload} disabled={uploading || !files.length}>
-                                {uploading ? 'Uploading...' : 'Upload Photos'}
-                            </Button>
-                        </CardContent>
-                    </Card>
                 )}
 
                 {loading ? (
@@ -223,6 +200,63 @@ export default function GalleryPage() {
                     </div>
                 )}
             </div>
+            {isAdmin && isUploadModalOpen && (
+                <div
+                    className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/50 p-3 sm:p-4"
+                    onClick={() => {
+                        if (!uploading) setIsUploadModalOpen(false);
+                    }}
+                >
+                    <Card
+                        className="w-full max-w-xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto mt-4 sm:mt-0"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <CardHeader>
+                            <CardTitle>Upload Gallery Photos</CardTitle>
+                            <CardDescription>
+                                Images are uploaded to Cloudinary with automatic optimization.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="gallery-title">Title (optional)</Label>
+                                <Input
+                                    id="gallery-title"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    placeholder="Festival 2026"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="gallery-images">Images</Label>
+                                <Input
+                                    id="gallery-images"
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Up to 15MB per image. You can select multiple files.
+                                </p>
+                            </div>
+                            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2">
+                                <Button
+                                    className="w-full sm:w-auto"
+                                    variant="outline"
+                                    onClick={() => setIsUploadModalOpen(false)}
+                                    disabled={uploading}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button className="w-full sm:w-auto" onClick={handleUpload} disabled={uploading || !files.length}>
+                                    {uploading ? 'Uploading...' : 'Upload Photos'}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

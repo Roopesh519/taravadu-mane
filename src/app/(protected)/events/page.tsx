@@ -38,6 +38,7 @@ export default function EventsPage() {
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
     const [form, setForm] = useState({ title: '', description: '', eventDate: '' });
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editForm, setEditForm] = useState({ title: '', description: '', eventDate: '' });
 
@@ -94,6 +95,7 @@ export default function EventsPage() {
             setError('Failed to create event.');
         } else {
             setForm({ title: '', description: '', eventDate: '' });
+            setIsCreateModalOpen(false);
             await fetchEvents();
         }
         setActionLoading(false);
@@ -159,9 +161,11 @@ export default function EventsPage() {
                             Family celebrations, rituals, and gatherings
                         </p>
                     </div>
-                    <Button variant="outline" onClick={fetchEvents} disabled={loading}>
-                        Refresh
-                    </Button>
+                    <div className="flex w-full sm:w-auto items-center gap-2">
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={fetchEvents} disabled={loading}>
+                            Refresh
+                        </Button>
+                    </div>
                 </div>
 
                 {error && (
@@ -169,47 +173,18 @@ export default function EventsPage() {
                         <p className="text-sm text-destructive">{error}</p>
                     </div>
                 )}
-
                 <RoleGuard allowedRoles={['admin']} fallback={null}>
-                    <Card className="mb-8">
-                        <CardHeader>
-                            <CardTitle>Create Event</CardTitle>
-                            <CardDescription>Schedule a new family event.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="event-title">Title</Label>
-                                <Input
-                                    id="event-title"
-                                    value={form.title}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                                    placeholder="Event title"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="event-description">Description</Label>
-                                <textarea
-                                    id="event-description"
-                                    value={form.description}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                                    className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                    placeholder="Event details..."
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="event-date">Event Date & Time</Label>
-                                <Input
-                                    id="event-date"
-                                    type="datetime-local"
-                                    value={form.eventDate}
-                                    onChange={(e) => setForm((prev) => ({ ...prev, eventDate: e.target.value }))}
-                                />
-                            </div>
-                            <Button onClick={handleCreate} disabled={actionLoading}>
-                                Publish Event
-                            </Button>
-                        </CardContent>
-                    </Card>
+                    <div className="mb-6">
+                        <Button
+                            className="w-full sm:w-auto"
+                            onClick={() => {
+                                setError('');
+                                setIsCreateModalOpen(true);
+                            }}
+                        >
+                            Create Event
+                        </Button>
+                    </div>
                 </RoleGuard>
 
                 {loading ? (
@@ -397,6 +372,65 @@ export default function EventsPage() {
                     </div>
                 )}
             </div>
+            <RoleGuard allowedRoles={['admin']} fallback={null}>
+                {isCreateModalOpen && (
+                    <div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+                        onClick={() => {
+                            if (!actionLoading) setIsCreateModalOpen(false);
+                        }}
+                    >
+                        <Card className="w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
+                            <CardHeader>
+                                <CardTitle>Create Event</CardTitle>
+                                <CardDescription>Schedule a new family event.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="event-title">Title</Label>
+                                    <Input
+                                        id="event-title"
+                                        value={form.title}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                                        placeholder="Event title"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="event-description">Description</Label>
+                                    <textarea
+                                        id="event-description"
+                                        value={form.description}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
+                                        className="w-full min-h-[120px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        placeholder="Event details..."
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="event-date">Event Date & Time</Label>
+                                    <Input
+                                        id="event-date"
+                                        type="datetime-local"
+                                        value={form.eventDate}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, eventDate: e.target.value }))}
+                                    />
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setIsCreateModalOpen(false)}
+                                        disabled={actionLoading}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button onClick={handleCreate} disabled={actionLoading}>
+                                        Publish Event
+                                    </Button>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
+            </RoleGuard>
         </>
     );
 }
