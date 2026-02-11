@@ -110,3 +110,12 @@ export interface AccessRequest {
     denied_at?: Date;
     denied_by?: string;
 }
+
+export interface GalleryPhoto {
+    id: string;
+    title: string;
+    image_url: string;
+    width?: number;
+    height?: number;
+    created_at?: Date | string;
+}

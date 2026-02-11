@@ -28,7 +28,7 @@ export default function MembersNav() {
     return (
         <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
-                <Link href="/dashboard" className="font-bold text-xl text-primary flex items-center gap-2">
+                <Link href="/" className="font-bold text-xl text-primary flex items-center gap-2">
                     <Leaf className="h-5 w-5" />
                     Taravadu Portal
                 </Link>
