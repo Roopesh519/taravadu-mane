@@ -5,19 +5,27 @@ import { uploadGalleryImage } from '@/lib/cloudinary';
 
 const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15MB
 
-type UploadedFile = {
-    name: string;
-    type: string;
-    size: number;
-    arrayBuffer: () => Promise<ArrayBuffer>;
-};
+function apiError(status: number, code: string, error: string, retryable = false) {
+    return NextResponse.json({ code, error, retryable }, { status });
+}
 
-function isUploadedFile(value: FormDataEntryValue): value is UploadedFile {
+function parsePrefixedError(message: string) {
+    const index = message.indexOf(':');
+    if (index === -1) return null;
+    return {
+        code: message.slice(0, index),
+        details: message.slice(index + 1).trim(),
+    };
+}
+
+function isUploadedFile(value: FormDataEntryValue): value is File {
+    if (typeof value === 'string') return false;
+    const candidate = value as File;
     return (
-        typeof value !== 'string' &&
-        typeof (value as UploadedFile).arrayBuffer === 'function' &&
-        typeof (value as UploadedFile).name === 'string' &&
-        typeof (value as UploadedFile).size === 'number'
+        typeof candidate.arrayBuffer === 'function' &&
+        typeof candidate.name === 'string' &&
+        typeof candidate.size === 'number' &&
+        typeof candidate.type === 'string'
     );
 }
 
@@ -29,20 +37,20 @@ export async function POST(req: Request) {
         const title = String(form.get('title') || '').trim();
         const files = form
             .getAll('images')
-            .filter((item): item is UploadedFile => isUploadedFile(item) && item.size > 0);
+            .filter((item): item is File => isUploadedFile(item) && item.size > 0);
 
         if (!files.length) {
-            return NextResponse.json({ error: 'Please upload at least one image.' }, { status: 400 });
+            return apiError(400, 'NO_FILES', 'Please upload at least one image.');
         }
 
         const invalidType = files.find((file) => !file.type.startsWith('image/'));
         if (invalidType) {
-            return NextResponse.json({ error: 'Only image files are allowed.' }, { status: 400 });
+            return apiError(400, 'INVALID_FILE_TYPE', `Only image files are allowed. Invalid file: ${invalidType.name}`);
         }
 
         const oversized = files.find((file) => file.size > MAX_FILE_SIZE);
         if (oversized) {
-            return NextResponse.json({ error: 'Each image must be 15MB or less.' }, { status: 400 });
+            return apiError(400, 'FILE_TOO_LARGE', `Each image must be 15MB or less. Invalid file: ${oversized.name}`);
         }
 
         const adminDb = getAdminDb();
@@ -50,9 +58,9 @@ export async function POST(req: Request) {
 
         const uploads = await Promise.all(
             files.map(async (file) => {
-                const buffer = Buffer.from(await file.arrayBuffer());
+                const bytes = new Uint8Array(await file.arrayBuffer());
                 const uploaded = await uploadGalleryImage({
-                    buffer,
+                    bytes,
                     fileName: file.name,
                     mimeType: file.type || 'application/octet-stream',
                 });
@@ -90,12 +98,34 @@ export async function POST(req: Request) {
 
         return NextResponse.json({ ok: true, uploads }, { status: 201 });
     } catch (error: any) {
-        if (error.message === 'Forbidden') {
-            return NextResponse.json({ error: error.message }, { status: 403 });
+        const message = String(error?.message || 'Failed to upload gallery images.');
+
+        if (message === 'Forbidden') {
+            return apiError(403, 'FORBIDDEN', 'Only admins can upload gallery photos.');
         }
-        if (error.message === 'Missing auth token') {
-            return NextResponse.json({ error: error.message }, { status: 401 });
+        if (message === 'Missing auth token') {
+            return apiError(401, 'MISSING_AUTH_TOKEN', 'You must be signed in to upload photos.');
         }
-        return NextResponse.json({ error: error.message || 'Failed to upload gallery images.' }, { status: 500 });
+
+        const prefixed = parsePrefixedError(message);
+        if (prefixed?.code === 'CLOUDINARY_NETWORK_ERROR') {
+            return apiError(
+                503,
+                prefixed.code,
+                'Image storage is temporarily unreachable. Please try again.',
+                true
+            );
+        }
+        if (prefixed?.code === 'CLOUDINARY_REQUEST_ERROR') {
+            return apiError(502, prefixed.code, 'Could not send image upload request to storage service.', true);
+        }
+        if (prefixed?.code === 'CLOUDINARY_UPLOAD_ERROR') {
+            return apiError(502, prefixed.code, prefixed.details || 'Image upload was rejected by storage service.');
+        }
+        if (prefixed?.code === 'CLOUDINARY_CONFIG_ERROR') {
+            return apiError(500, prefixed.code, 'Cloudinary server configuration is invalid.');
+        }
+
+        return apiError(500, 'INTERNAL_ERROR', message);
     }
 }

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 
+function apiError(status: number, code: string, error: string, retryable = false) {
+    return NextResponse.json({ code, error, retryable }, { status });
+}
+
 function asIso(value: any): string | null {
     if (!value) return null;
     if (value instanceof Date) return value.toISOString();
@@ -32,6 +36,6 @@ export async function GET() {
 
         return NextResponse.json({ photos });
     } catch (error: any) {
-        return NextResponse.json({ error: error.message || 'Failed to load gallery' }, { status: 500 });
+        return apiError(500, 'GALLERY_FETCH_ERROR', error.message || 'Failed to load gallery photos.', true);
     }
 }

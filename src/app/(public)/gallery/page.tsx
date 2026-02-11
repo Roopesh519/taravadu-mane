@@ -10,6 +10,35 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { GalleryPhoto } from '@/lib/types';
 
+const MAX_FILE_SIZE = 15 * 1024 * 1024;
+
+function mapApiErrorToMessage(code?: string, fallback?: string) {
+    switch (code) {
+        case 'MISSING_AUTH_TOKEN':
+            return 'Your session expired. Please sign in again and retry.';
+        case 'FORBIDDEN':
+            return 'Only admins can upload gallery photos.';
+        case 'NO_FILES':
+            return 'Please select at least one image.';
+        case 'INVALID_FILE_TYPE':
+            return 'Only image files are allowed (JPG, PNG, WebP, etc).';
+        case 'FILE_TOO_LARGE':
+            return 'Each image must be 15MB or less.';
+        case 'CLOUDINARY_NETWORK_ERROR':
+            return 'Upload failed due to a temporary network issue while reaching image storage. Please retry.';
+        case 'CLOUDINARY_REQUEST_ERROR':
+            return 'Could not reach the image storage service. Please retry.';
+        case 'CLOUDINARY_UPLOAD_ERROR':
+            return 'The image storage service rejected the upload. Please try a different file.';
+        case 'CLOUDINARY_CONFIG_ERROR':
+            return 'Image storage is not configured correctly on the server.';
+        case 'GALLERY_FETCH_ERROR':
+            return 'Could not load gallery photos right now. Please refresh and try again.';
+        default:
+            return fallback || 'Something went wrong. Please try again.';
+    }
+}
+
 export default function GalleryPage() {
     const { hasRole } = useAuth();
     const isAdmin = hasRole('admin');
@@ -28,11 +57,11 @@ export default function GalleryPage() {
             const res = await fetch('/api/gallery', { cache: 'no-store' });
             const data = await res.json();
             if (!res.ok) {
-                throw new Error(data.error || 'Failed to fetch gallery photos.');
+                throw new Error(mapApiErrorToMessage(data?.code, data?.error));
             }
             setPhotos(data.photos || []);
         } catch (err: any) {
-            setError(err.message || 'Failed to fetch gallery photos.');
+            setError(err.message || 'Could not load gallery photos right now.');
         } finally {
             setLoading(false);
         }
@@ -45,6 +74,16 @@ export default function GalleryPage() {
     const handleUpload = async () => {
         if (!files.length) {
             setError('Please select one or more images.');
+            return;
+        }
+        const invalidType = files.find((file) => !file.type.startsWith('image/'));
+        if (invalidType) {
+            setError(`Only image files are allowed. Invalid file: ${invalidType.name}`);
+            return;
+        }
+        const oversized = files.find((file) => file.size > MAX_FILE_SIZE);
+        if (oversized) {
+            setError(`Each image must be 15MB or less. Invalid file: ${oversized.name}`);
             return;
         }
 
@@ -73,7 +112,7 @@ export default function GalleryPage() {
 
             const data = await res.json();
             if (!res.ok) {
-                throw new Error(data.error || 'Failed to upload images.');
+                throw new Error(mapApiErrorToMessage(data?.code, data?.error));
             }
 
             setTitle('');
@@ -82,7 +121,12 @@ export default function GalleryPage() {
             if (input) input.value = '';
             await fetchPhotos();
         } catch (err: any) {
-            setError(err.message || 'Failed to upload images.');
+            const message = String(err?.message || '');
+            if (message.toLowerCase().includes('failed to fetch')) {
+                setError('Unable to reach the server. Please check your connection and retry.');
+            } else {
+                setError(message || 'Failed to upload images.');
+            }
         } finally {
             setUploading(false);
         }
