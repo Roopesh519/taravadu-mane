@@ -71,7 +71,9 @@ export async function uploadGalleryImage(options: {
     const signature = signParams(uploadParams, apiSecret);
 
     const form = new FormData();
-    form.append('file', new Blob([options.bytes], { type: options.mimeType }), options.fileName);
+    const base64 = Buffer.from(options.bytes).toString('base64');
+    const dataUri = `data:${options.mimeType};base64,${base64}`;
+    form.append('file', dataUri);
     form.append('api_key', apiKey);
     form.append('timestamp', timestamp);
     form.append('folder', uploadParams.folder);
