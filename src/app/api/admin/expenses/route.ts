@@ -14,6 +14,12 @@ function parseDate(value: any): Date | null {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseOptionalString(value: any): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+}
+
 export async function POST(req: Request) {
     try {
         const admin = await requireAdminOrTreasurer(req.headers.get('authorization'));
@@ -26,9 +32,18 @@ export async function POST(req: Request) {
         const description = body.description || '';
         const receiptUrl = body.receipt_url || '';
         const expenseDate = parseDate(body.expense_date);
+        const eventId = parseOptionalString(body.event_id);
 
         if (!title || !category || amount === null || !expenseDate) {
             return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
+        }
+
+        if (eventId) {
+            const eventRef = adminDb.collection('events').doc(eventId);
+            const eventSnap = await eventRef.get();
+            if (!eventSnap.exists) {
+                return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
+            }
         }
 
         const now = new Date();
@@ -38,6 +53,7 @@ export async function POST(req: Request) {
             description: description || null,
             amount,
             receipt_url: receiptUrl || null,
+            event_id: eventId,
             expense_date: expenseDate,
             created_by: admin.uid,
             created_at: now,

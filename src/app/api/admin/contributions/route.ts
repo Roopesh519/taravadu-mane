@@ -14,6 +14,12 @@ function parseDate(value: any): Date | null {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseOptionalString(value: any): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+}
+
 export async function POST(req: Request) {
     try {
         const admin = await requireAdminOrTreasurer(req.headers.get('authorization'));
@@ -26,6 +32,7 @@ export async function POST(req: Request) {
         const status = body.status;
         const paymentMode = body.payment_mode || '';
         const paidOn = parseDate(body.paid_on);
+        const eventId = parseOptionalString(body.event_id);
 
         if (!userId || year === null || amount === null || !status) {
             return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
@@ -33,6 +40,14 @@ export async function POST(req: Request) {
 
         if (status === 'paid' && !paidOn) {
             return NextResponse.json({ error: 'Paid contributions must include a paid date.' }, { status: 400 });
+        }
+
+        if (eventId) {
+            const eventRef = adminDb.collection('events').doc(eventId);
+            const eventSnap = await eventRef.get();
+            if (!eventSnap.exists) {
+                return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
+            }
         }
 
         const now = new Date();
@@ -43,6 +58,7 @@ export async function POST(req: Request) {
             status,
             paid_on: paidOn || null,
             payment_mode: paymentMode || null,
+            event_id: eventId,
             created_by: admin.uid,
             created_at: now,
             updated_at: now,

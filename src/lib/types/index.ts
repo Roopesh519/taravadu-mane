@@ -37,6 +37,7 @@ export interface Event {
 export interface Contribution {
     id: string;
     user_id: string;
+    event_id?: string;
     year: number;
     amount: number;
     status: 'paid' | 'pending';
@@ -49,6 +50,7 @@ export interface Expense {
     id: string;
     title: string;
     category: 'pooja' | 'electricity' | 'maintenance' | 'renovation' | 'misc';
+    event_id?: string;
     description?: string;
     amount: number;
     receipt_url?: string;

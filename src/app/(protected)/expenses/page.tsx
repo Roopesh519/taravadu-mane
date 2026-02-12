@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { auth } from '@/lib/firebase/config';
 import { getDocuments } from '@/lib/firebase/db';
-import { Expense } from '@/lib/types';
+import { Event, Expense } from '@/lib/types';
 import { orderBy } from 'firebase/firestore';
 
 function parseDate(value: any): Date | null {
@@ -38,6 +38,7 @@ export default function ExpensesPage() {
     const { hasAnyRole } = useAuth();
     const isFinanceAdmin = hasAnyRole(['admin', 'treasurer']);
     const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
@@ -50,6 +51,7 @@ export default function ExpensesPage() {
         amount: '',
         expense_date: '',
         receipt_url: '',
+        event_id: '',
     });
     const [editForm, setEditForm] = useState({
         title: '',
@@ -58,18 +60,23 @@ export default function ExpensesPage() {
         amount: '',
         expense_date: '',
         receipt_url: '',
+        event_id: '',
     });
 
-    const fetchExpenses = async () => {
+    const fetchData = async () => {
         setLoading(true);
         setError('');
-        const data = await getDocuments<Expense>('expenses', [orderBy('expense_date', 'desc')]);
-        setExpenses(data);
+        const [expenseData, eventData] = await Promise.all([
+            getDocuments<Expense>('expenses', [orderBy('expense_date', 'desc')]),
+            getDocuments<Event>('events', [orderBy('event_date', 'desc')]),
+        ]);
+        setExpenses(expenseData);
+        setEvents(eventData);
         setLoading(false);
     };
 
     useEffect(() => {
-        fetchExpenses();
+        fetchData();
     }, []);
 
     const handleCreate = async () => {
@@ -84,6 +91,7 @@ export default function ExpensesPage() {
             amount: Number(form.amount),
             expense_date: form.expense_date,
             receipt_url: form.receipt_url || null,
+            event_id: form.event_id || null,
         };
         setActionLoading(true);
         setError('');
@@ -108,9 +116,10 @@ export default function ExpensesPage() {
                 amount: '',
                 expense_date: '',
                 receipt_url: '',
+                event_id: '',
             });
             setIsCreateModalOpen(false);
-            await fetchExpenses();
+            await fetchData();
         } catch (err: any) {
             setError(err.message || 'Failed to create expense.');
         } finally {
@@ -128,6 +137,7 @@ export default function ExpensesPage() {
             amount: expense.amount.toString(),
             expense_date: expenseDate ? toDateInputValue(expenseDate) : '',
             receipt_url: expense.receipt_url || '',
+            event_id: expense.event_id || '',
         });
     };
 
@@ -143,6 +153,7 @@ export default function ExpensesPage() {
             amount: Number(editForm.amount),
             expense_date: editForm.expense_date,
             receipt_url: editForm.receipt_url || null,
+            event_id: editForm.event_id || null,
         };
         setActionLoading(true);
         setError('');
@@ -161,7 +172,7 @@ export default function ExpensesPage() {
                 throw new Error(data.error || 'Failed to update expense.');
             }
             setEditingId(null);
-            await fetchExpenses();
+            await fetchData();
         } catch (err: any) {
             setError(err.message || 'Failed to update expense.');
         } finally {
@@ -184,7 +195,7 @@ export default function ExpensesPage() {
             if (!res.ok) {
                 throw new Error(data.error || 'Failed to delete expense.');
             }
-            await fetchExpenses();
+            await fetchData();
         } catch (err: any) {
             setError(err.message || 'Failed to delete expense.');
         } finally {
@@ -204,7 +215,7 @@ export default function ExpensesPage() {
                         </p>
                     </div>
                     <div className="flex w-full sm:w-auto items-center gap-2">
-                        <Button className="w-full sm:w-auto" variant="outline" onClick={fetchExpenses} disabled={loading}>
+                        <Button className="w-full sm:w-auto" variant="outline" onClick={fetchData} disabled={loading}>
                             Refresh
                         </Button>
                     </div>
@@ -242,7 +253,9 @@ export default function ExpensesPage() {
                     </Card>
                 ) : (
                     <div className="space-y-4">
-                        {expenses.map((expense) => (
+                        {expenses.map((expense) => {
+                            const linkedEvent = events.find((event) => event.id === expense.event_id);
+                            return (
                             <Card key={expense.id}>
                                 <CardHeader className="pb-2">
                                     <CardTitle className="text-lg">{expense.title}</CardTitle>
@@ -270,6 +283,22 @@ export default function ExpensesPage() {
                                                     {expenseCategories.map((category) => (
                                                         <option key={category} value={category}>
                                                             {category}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2 md:col-span-2">
+                                                <Label htmlFor={`edit-event-${expense.id}`}>Associated Event</Label>
+                                                <select
+                                                    id={`edit-event-${expense.id}`}
+                                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                    value={editForm.event_id}
+                                                    onChange={(e) => setEditForm((prev) => ({ ...prev, event_id: e.target.value }))}
+                                                >
+                                                    <option value="">No linked event</option>
+                                                    {events.map((event) => (
+                                                        <option key={event.id} value={event.id}>
+                                                            {event.title}
                                                         </option>
                                                     ))}
                                                 </select>
@@ -329,6 +358,11 @@ export default function ExpensesPage() {
                                                 <span className="text-sm text-muted-foreground">
                                                     Amount: ₹{expense.amount}
                                                 </span>
+                                                {linkedEvent && (
+                                                    <span className="text-sm text-muted-foreground">
+                                                        Event: {linkedEvent.title}
+                                                    </span>
+                                                )}
                                             </div>
                                             {expense.description && (
                                                 <p className="text-sm text-muted-foreground whitespace-pre-line">
@@ -367,7 +401,8 @@ export default function ExpensesPage() {
                                     )}
                                 </CardContent>
                             </Card>
-                        ))}
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -407,6 +442,22 @@ export default function ExpensesPage() {
                                         {expenseCategories.map((category) => (
                                             <option key={category} value={category}>
                                                 {category}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="expense-event">Associated Event</Label>
+                                    <select
+                                        id="expense-event"
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={form.event_id}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, event_id: e.target.value }))}
+                                    >
+                                        <option value="">No linked event</option>
+                                        {events.map((event) => (
+                                            <option key={event.id} value={event.id}>
+                                                {event.title}
                                             </option>
                                         ))}
                                     </select>

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { auth } from '@/lib/firebase/config';
 import { getDocuments } from '@/lib/firebase/db';
-import { Contribution, User } from '@/lib/types';
+import { Contribution, Event, User } from '@/lib/types';
 import { orderBy, where } from 'firebase/firestore';
 
 function parseDate(value: any): Date | null {
@@ -37,6 +37,7 @@ export default function ContributionsPage() {
     const isFinanceAdmin = hasAnyRole(['admin', 'treasurer']);
     const [contributions, setContributions] = useState<Contribution[]>([]);
     const [users, setUsers] = useState<User[]>([]);
+    const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [actionLoading, setActionLoading] = useState(false);
@@ -50,6 +51,7 @@ export default function ContributionsPage() {
         status: 'pending',
         paid_on: '',
         payment_mode: '',
+        event_id: '',
     });
     const [editForm, setEditForm] = useState({
         user_id: '',
@@ -58,6 +60,7 @@ export default function ContributionsPage() {
         status: 'pending',
         paid_on: '',
         payment_mode: '',
+        event_id: '',
     });
 
     const fetchData = useCallback(async () => {
@@ -72,8 +75,12 @@ export default function ContributionsPage() {
             constraints.push(where('user_id', '==', user.id));
         }
         constraints.push(orderBy('year', 'desc'));
-        const data = await getDocuments<Contribution>('contributions', constraints);
-        setContributions(data);
+        const [contributionData, eventData] = await Promise.all([
+            getDocuments<Contribution>('contributions', constraints),
+            getDocuments<Event>('events', [orderBy('event_date', 'desc')]),
+        ]);
+        setContributions(contributionData);
+        setEvents(eventData);
         if (isFinanceAdmin) {
             const people = await getDocuments<User>('users', [orderBy('name', 'asc')]);
             setUsers(people);
@@ -82,7 +89,7 @@ export default function ContributionsPage() {
             }
         }
         setLoading(false);
-    }, [currentYear, isFinanceAdmin, user?.id]);
+    }, [isFinanceAdmin, user?.id]);
 
     useEffect(() => {
         fetchData();
@@ -106,6 +113,7 @@ export default function ContributionsPage() {
             status: form.status,
             paid_on: form.paid_on || null,
             payment_mode: form.payment_mode || null,
+            event_id: form.event_id || null,
         };
         setActionLoading(true);
         setError('');
@@ -130,6 +138,7 @@ export default function ContributionsPage() {
                 status: 'pending',
                 paid_on: '',
                 payment_mode: '',
+                event_id: '',
             });
             setIsCreateModalOpen(false);
             await fetchData();
@@ -150,6 +159,7 @@ export default function ContributionsPage() {
             status: contribution.status,
             paid_on: paidOn ? toDateInputValue(paidOn) : '',
             payment_mode: contribution.payment_mode || '',
+            event_id: contribution.event_id || '',
         });
     };
 
@@ -165,6 +175,7 @@ export default function ContributionsPage() {
             status: editForm.status,
             paid_on: editForm.paid_on || null,
             payment_mode: editForm.payment_mode || null,
+            event_id: editForm.event_id || null,
         };
         setActionLoading(true);
         setError('');
@@ -266,6 +277,7 @@ export default function ContributionsPage() {
                     <div className="space-y-4">
                         {contributions.map((contribution) => {
                             const member = userMap.get(contribution.user_id);
+                            const linkedEvent = events.find((event) => event.id === contribution.event_id);
                             return (
                                 <Card key={contribution.id}>
                                     <CardHeader className="pb-2">
@@ -324,6 +336,22 @@ export default function ContributionsPage() {
                                                         <option value="paid">Paid</option>
                                                     </select>
                                                 </div>
+                                                <div className="space-y-2 md:col-span-2">
+                                                    <Label htmlFor={`edit-event-${contribution.id}`}>Associated Event</Label>
+                                                    <select
+                                                        id={`edit-event-${contribution.id}`}
+                                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                                        value={editForm.event_id}
+                                                        onChange={(e) => setEditForm((prev) => ({ ...prev, event_id: e.target.value }))}
+                                                    >
+                                                        <option value="">No linked event</option>
+                                                        {events.map((event) => (
+                                                            <option key={event.id} value={event.id}>
+                                                                {event.title}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
                                                 <div className="space-y-2">
                                                     <Label htmlFor={`edit-paid-${contribution.id}`}>Paid On</Label>
                                                     <Input
@@ -366,6 +394,11 @@ export default function ContributionsPage() {
                                                     {contribution.payment_mode && (
                                                         <span className="text-sm text-muted-foreground">
                                                             Mode: {contribution.payment_mode}
+                                                        </span>
+                                                    )}
+                                                    {linkedEvent && (
+                                                        <span className="text-sm text-muted-foreground">
+                                                            Event: {linkedEvent.title}
                                                         </span>
                                                     )}
                                                 </div>
@@ -456,6 +489,22 @@ export default function ContributionsPage() {
                                     >
                                         <option value="pending">Pending</option>
                                         <option value="paid">Paid</option>
+                                    </select>
+                                </div>
+                                <div className="space-y-2 md:col-span-2">
+                                    <Label htmlFor="contribution-event">Associated Event</Label>
+                                    <select
+                                        id="contribution-event"
+                                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                        value={form.event_id}
+                                        onChange={(e) => setForm((prev) => ({ ...prev, event_id: e.target.value }))}
+                                    >
+                                        <option value="">No linked event</option>
+                                        {events.map((event) => (
+                                            <option key={event.id} value={event.id}>
+                                                {event.title}
+                                            </option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div className="space-y-2">

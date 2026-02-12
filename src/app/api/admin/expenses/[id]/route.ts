@@ -14,6 +14,12 @@ function parseDate(value: any): Date | null {
     return Number.isNaN(date.getTime()) ? null : date;
 }
 
+function parseOptionalString(value: any): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed ? trimmed : null;
+}
+
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
     try {
         const admin = await requireAdminOrTreasurer(req.headers.get('authorization'));
@@ -28,6 +34,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         if (body.description !== undefined) updateData.description = body.description || null;
         if (body.receipt_url !== undefined) updateData.receipt_url = body.receipt_url || null;
         if (body.expense_date !== undefined) updateData.expense_date = parseDate(body.expense_date);
+        if (body.event_id !== undefined) updateData.event_id = parseOptionalString(body.event_id);
 
         const now = new Date();
         updateData.updated_at = now;
@@ -36,6 +43,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         const existing = await expenseRef.get();
         if (!existing.exists) {
             return NextResponse.json({ error: 'Expense not found.' }, { status: 404 });
+        }
+
+        if (updateData.event_id) {
+            const eventRef = adminDb.collection('events').doc(updateData.event_id);
+            const eventSnap = await eventRef.get();
+            if (!eventSnap.exists) {
+                return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
+            }
         }
 
         await expenseRef.update(updateData);
