@@ -21,9 +21,9 @@ export default function ContactPage() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">
-                                Taravadu Village<br />
-                                District, State<br />
-                                PIN Code
+                                Someshwara, Ullala<br />
+                                D.K, Karnataka<br />
+                                575022
                             </p>
                         </CardContent>
                     </Card>
@@ -52,8 +52,8 @@ export default function ContactPage() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-muted-foreground">
-                                +91 XXXXX XXXXX<br />
-                                +91 XXXXX XXXXX
+                                +91 84958 24810<br />
+                                +91 99457 52376
                             </p>
                         </CardContent>
                     </Card>

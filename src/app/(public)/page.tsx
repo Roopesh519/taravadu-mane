@@ -110,8 +110,9 @@ export default function HomePage() {
                             Digital home for our Taravadu family
                         </p>
                         <p className="text-base md:text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-                            Connecting generations, preserving traditions, and managing our ancestral home together.
-                            A sacred space where family bonds strengthen and heritage lives on.
+                            Located in Someshwara, Ullala, Karnataka, our Taravadu Mane is the ancestral home of 13+
+                            families and 50+ members. We preserve our traditions, strengthen family bonds, and carry
+                            our heritage forward together.
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
                             <HideWhenAuthed>
@@ -137,20 +138,20 @@ export default function HomePage() {
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">150+</div>
+                            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">50+</div>
                             <div className="text-sm text-muted-foreground">Family Members</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">50+</div>
-                            <div className="text-sm text-muted-foreground">Years of Heritage</div>
+                            <div className="text-3xl md:text-4xl font-bold text-secondary mb-2">13+</div>
+                            <div className="text-sm text-muted-foreground">Families</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-accent mb-2">25+</div>
-                            <div className="text-sm text-muted-foreground">Annual Events</div>
+                            <div className="text-3xl md:text-4xl font-bold text-accent mb-2">3</div>
+                            <div className="text-sm text-muted-foreground">Daivas Worshipped</div>
                         </div>
                         <div className="text-center">
-                            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">100%</div>
-                            <div className="text-sm text-muted-foreground">Transparent</div>
+                            <div className="text-3xl md:text-4xl font-bold text-primary mb-2">12+</div>
+                            <div className="text-sm text-muted-foreground">Sankramana Observances / Year</div>
                         </div>
                     </div>
                 </div>
@@ -310,9 +311,10 @@ export default function HomePage() {
                             <div className="w-20 h-1 bg-gradient-to-r from-primary to-secondary mx-auto mb-6"></div>
                         </div>
                         <p className="text-lg text-muted-foreground text-center mb-8 max-w-2xl mx-auto leading-relaxed">
-                            The Taravadu Mane has been the spiritual and cultural center of our family for generations.
-                            It houses our family deity and serves as a sacred gathering place for important rituals,
-                            joyous celebrations, and meaningful family events.
+                            Taravadu Mane in Someshwara, Ullala, Karnataka, is the spiritual center of our extended
+                            family. We mainly worship three daivas: Kallurti, Panjurli, and Mantradevate. Every year
+                            we conduct our Bhootha celebration, and every month we observe Sankramana with devotion to
+                            seek blessings and uphold our ancestral traditions.
                         </p>
                         <div className="text-center">
                             <Link href="/history">

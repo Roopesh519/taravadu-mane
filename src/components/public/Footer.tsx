@@ -38,7 +38,7 @@ export default function Footer() {
                         <ul className="space-y-2 text-sm text-muted-foreground">
                             <li className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4 text-primary" />
-                                <span>Location: Taravadu Village</span>
+                                <span>Location: Someshwara, Ullala, Karnataka - 575022</span>
                             </li>
                             <li className="flex items-center gap-2">
                                 <Mail className="h-4 w-4 text-primary" />
@@ -46,7 +46,7 @@ export default function Footer() {
                             </li>
                             <li className="flex items-center gap-2">
                                 <Phone className="h-4 w-4 text-primary" />
-                                <span>Phone: +91 XXXXX XXXXX</span>
+                                <span>Phone: +91 8495824810</span>
                             </li>
                         </ul>
                     </div>

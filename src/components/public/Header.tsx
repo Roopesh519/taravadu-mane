@@ -11,6 +11,11 @@ import templeLogo from '@/app/temple.png';
 export default function PublicHeader() {
     const { user, signOut } = useAuth();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const handleSignOut = async () => {
+        const confirmed = window.confirm('Are you sure you want to sign out?');
+        if (!confirmed) return;
+        await signOut();
+    };
 
     return (
         <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -49,9 +54,14 @@ export default function PublicHeader() {
                     {user ? (
                         <div className="flex items-center gap-4">
                             <Link href="/dashboard">
-                                <Button variant="outline" size="sm">Dashboard</Button>
+                                <Button variant="outline" size="sm" className="hidden md:inline-flex">Dashboard</Button>
                             </Link>
-                            <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="hidden md:inline-flex"
+                                onClick={handleSignOut}
+                            >
                                 Sign Out
                             </Button>
                         </div>
@@ -110,6 +120,27 @@ export default function PublicHeader() {
                         >
                             Contact
                         </Link>
+                        {user && (
+                            <>
+                                <div className="my-1 border-t border-border/60" />
+                                <Link href="/dashboard" onClick={() => setMobileOpen(false)}>
+                                    <Button variant="outline" size="sm" className="w-full justify-start">
+                                        Dashboard
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    className="w-full justify-start"
+                                    onClick={async () => {
+                                        await handleSignOut();
+                                        setMobileOpen(false);
+                                    }}
+                                >
+                                    Sign Out
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

@@ -8,8 +8,9 @@ export default function AboutPage() {
 
                 <div className="prose prose-lg max-w-none">
                     <p className="text-xl text-muted-foreground mb-8">
-                        The Taravadu Mane is the ancestral home and spiritual center of our family,
-                        representing generations of tradition, culture, and togetherness.
+                        Taravadu Mane, located in Someshwara, Ullala, Karnataka, India, is the ancestral
+                        home and spiritual center of our extended family. It is home to 13+ families and
+                        50+ members connected through shared faith, culture, and tradition.
                     </p>
 
                     <div className="grid md:grid-cols-2 gap-6 my-12">
@@ -19,8 +20,9 @@ export default function AboutPage() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-muted-foreground">
-                                    The Taravadu Mane serves as a sacred space for family rituals, festivals,
-                                    and gatherings. It houses our family deity and connects us to our ancestral roots.
+                                    Taravadu Mane is a sacred space for rituals, festivals, and family
+                                    gatherings. We mainly worship three daivas: Kallurti, Panjurli, and
+                                    Mantradevate, and seek their blessings for the well-being of all members.
                                 </p>
                             </CardContent>
                         </Card>
@@ -31,12 +33,25 @@ export default function AboutPage() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-muted-foreground">
-                                    Through collective participation and contribution, we maintain this sacred
-                                    space for future generations, ensuring our traditions continue to thrive.
+                                    Through collective participation and contribution, all branches of the
+                                    family maintain this sacred home for future generations and keep our
+                                    ancestral customs alive.
                                 </p>
                             </CardContent>
                         </Card>
                     </div>
+
+                    <h2 className="text-2xl font-bold mt-12 mb-4">Sacred Observances</h2>
+                    <ul className="space-y-3">
+                        <li className="flex items-start gap-2">
+                            <span className="text-primary">•</span>
+                            <span><strong>Annual Bhootha Celebration:</strong> A major yearly observance where we serve the deities, pray, and seek blessings.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                            <span className="text-primary">•</span>
+                            <span><strong>Monthly Sankramana:</strong> A regular devotional event where family members gather for prayer and offerings.</span>
+                        </li>
+                    </ul>
 
                     <h2 className="text-2xl font-bold mt-12 mb-4">Our Values</h2>
                     <ul className="space-y-3">
@@ -60,9 +75,9 @@ export default function AboutPage() {
 
                     <h2 className="text-2xl font-bold mt-12 mb-4">Digital Portal</h2>
                     <p>
-                        This family portal was created to modernize how we manage our Taravadu Mane
-                        while preserving our traditions. It provides a transparent, accessible platform
-                        for all family members to stay connected and participate in our community.
+                        This family portal helps us coordinate events, share updates, and manage Taravadu
+                        activities while preserving tradition. It provides an accessible platform for all
+                        family members to stay informed and connected.
                     </p>
                 </div>
             </div>

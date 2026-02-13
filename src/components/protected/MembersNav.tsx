@@ -13,6 +13,11 @@ export default function MembersNav() {
     const pathname = usePathname();
     const { user, signOut, hasRole } = useAuth();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const handleSignOut = async () => {
+        const confirmed = window.confirm('Are you sure you want to sign out?');
+        if (!confirmed) return;
+        await signOut();
+    };
 
     const navItems = [
         { name: 'Dashboard', href: '/dashboard' },
@@ -60,7 +65,12 @@ export default function MembersNav() {
                     <span className="text-sm text-muted-foreground hidden sm:block">
                         {user?.name}
                     </span>
-                    <Button variant="outline" size="sm" onClick={() => signOut()}>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        className="hidden lg:inline-flex"
+                        onClick={handleSignOut}
+                    >
                         Sign Out
                     </Button>
                     <Button
@@ -91,6 +101,18 @@ export default function MembersNav() {
                                     </Button>
                                 </Link>
                             ))}
+                        <div className="my-1 border-t border-border/60" />
+                        <Button
+                            variant="destructive"
+                            size="sm"
+                            className="w-full justify-start"
+                            onClick={async () => {
+                                await handleSignOut();
+                                setMobileOpen(false);
+                            }}
+                        >
+                            Sign Out
+                        </Button>
                     </div>
                 </div>
             )}
