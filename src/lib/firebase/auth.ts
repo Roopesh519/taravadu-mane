@@ -10,12 +10,56 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from './config';
 import { User } from '@/lib/types';
 
+function getFriendlyAuthErrorMessage(error: unknown): string {
+    const fallback = 'Failed to sign in. Please try again.';
+
+    if (!error || typeof error !== 'object') {
+        return fallback;
+    }
+
+    const code = 'code' in error && typeof error.code === 'string' ? error.code : '';
+    const message =
+        'message' in error && typeof error.message === 'string'
+            ? error.message
+            : '';
+
+    if (
+        code === 'auth/invalid-credential' ||
+        code === 'auth/invalid-login-credentials' ||
+        message.includes('INVALID_LOGIN_CREDENTIALS')
+    ) {
+        return 'Invalid email or password. Please try again.';
+    }
+
+    if (code === 'auth/invalid-email') {
+        return 'Please enter a valid email address.';
+    }
+
+    if (code === 'auth/user-disabled') {
+        return 'This account has been disabled. Please contact an administrator.';
+    }
+
+    if (code === 'auth/too-many-requests') {
+        return 'Too many failed attempts. Please wait a while and try again.';
+    }
+
+    if (code === 'auth/network-request-failed') {
+        return 'Network error. Check your internet connection and try again.';
+    }
+
+    return fallback;
+}
+
 /**
  * Sign in with email and password
  */
 export async function signIn(email: string, password: string): Promise<FirebaseUser> {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    return userCredential.user;
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        return userCredential.user;
+    } catch (error: unknown) {
+        throw new Error(getFriendlyAuthErrorMessage(error));
+    }
 }
 
 /**
