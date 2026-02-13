@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
-import { Leaf, Menu, X } from 'lucide-react';
+import Image from 'next/image';
+import { Menu, X } from 'lucide-react';
+import templeLogo from '@/app/temple.png';
 
 export default function PublicHeader() {
     const { user, signOut } = useAuth();
@@ -14,7 +16,14 @@ export default function PublicHeader() {
         <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
                 <Link href="/" className="font-bold text-xl text-primary flex items-center gap-2">
-                    <Leaf className="h-5 w-5" />
+                    <Image
+                        src={templeLogo}
+                        alt="Taravadu Mane logo"
+                        width={32}
+                        height={32}
+                        className="h-8 w-8 rounded-sm object-cover"
+                        priority
+                    />
                     Taravadu Mane
                 </Link>
 

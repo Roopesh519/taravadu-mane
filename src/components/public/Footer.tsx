@@ -1,4 +1,6 @@
 import { Mail, MapPin, Phone } from 'lucide-react';
+import Image from 'next/image';
+import templeLogo from '@/app/temple.png';
 
 export default function Footer() {
     return (
@@ -6,7 +8,16 @@ export default function Footer() {
             <div className="container mx-auto px-4 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
-                        <h3 className="font-semibold text-lg mb-3 text-primary">Taravadu Mane</h3>
+                        <div className="flex items-center gap-2 mb-3">
+                            <Image
+                                src={templeLogo}
+                                alt="Taravadu Mane logo"
+                                width={32}
+                                height={32}
+                                className="h-8 w-8 rounded-sm object-cover"
+                            />
+                            <h3 className="font-semibold text-lg text-primary">Taravadu Mane</h3>
+                        </div>
                         <p className="text-sm text-muted-foreground">
                             Digital home for our Taravadu family, preserving traditions and connecting generations.
                         </p>
