@@ -66,15 +66,15 @@ export default function LoginForm() {
     };
 
     return (
-        <Card className="w-full max-w-md">
-            <CardHeader className="space-y-1">
-                <CardTitle className="text-2xl text-center">Member Login</CardTitle>
+        <Card className="w-full max-w-md shadow-sm m-10">
+            <CardHeader className="space-y-1 pb-4">
+                <CardTitle className="text-2xl text-center tracking-tight">Member Login</CardTitle>
                 <CardDescription className="text-center">
                     Enter your credentials to access the family portal
                 </CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmit}>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 pb-5">
                     {error && (
                         <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-md">
                             <p className="text-sm text-destructive">{error}</p>
@@ -88,6 +88,7 @@ export default function LoginForm() {
                             placeholder="your.email@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            autoComplete="email"
                             required
                             disabled={loading}
                         />
@@ -100,12 +101,13 @@ export default function LoginForm() {
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            autoComplete="current-password"
                             required
                             disabled={loading}
                         />
                     </div>
                 </CardContent>
-                <CardFooter className="flex flex-col space-y-2">
+                <CardFooter className="flex flex-col space-y-2 pt-0">
                     <Button type="submit" className="w-full" disabled={loading}>
                         {loading ? 'Signing in...' : 'Sign In'}
                     </Button>
@@ -122,8 +124,19 @@ export default function LoginForm() {
                 </CardFooter>
             </form>
 
-            <div className="border-t px-6 py-5">
-                <h3 className="font-semibold text-lg mb-1 text-center">Request Member Access</h3>
+            <div className="px-6 py-1">
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase tracking-wide">
+                        <span className="bg-card px-2 text-muted-foreground">Or</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-6 pb-6 pt-3">
+                <h3 className="font-semibold text-lg mb-1 text-center tracking-tight">Request Member Access</h3>
                 <p className="text-sm text-muted-foreground text-center mb-4">
                     Not registered yet? Submit a request for admin approval.
                 </p>
