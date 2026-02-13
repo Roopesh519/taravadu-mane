@@ -23,11 +23,23 @@ service cloud.firestore {
     function isTreasurer() {
       return hasRole('treasurer');
     }
+
+    function isOwnProfileUpdate(userId) {
+      return request.auth.uid == userId
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'name',
+          'phone',
+          'family_branch',
+          'city',
+          'photo_url',
+          'updated_at'
+        ]);
+    }
     
     // Users collection
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow update: if request.auth.uid == userId || isAdmin();
+      allow update: if isOwnProfileUpdate(userId) || isAdmin();
       allow create, delete: if isAdmin();
     }
     
@@ -75,8 +87,7 @@ service cloud.firestore {
 
     // Access Requests (public create, admin review)
     match /access_requests/{doc} {
-      allow create: if request.resource.data.status == 'pending';
-      allow read, update, delete: if isAdmin();
+      allow read, write: if false;  // ONLY via API routes
     }
   }
 }

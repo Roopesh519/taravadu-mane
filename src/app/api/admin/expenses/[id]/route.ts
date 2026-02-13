@@ -1,24 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { requireAdminOrTreasurer } from '@/lib/firebase/adminAuth';
-
-function parseNumber(value: any, fallback: number | null = null) {
-    if (value === null || value === undefined || value === '') return fallback;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function parseDate(value: any): Date | null {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function parseOptionalString(value: any): string | null {
-    if (typeof value !== 'string') return null;
-    const trimmed = value.trim();
-    return trimmed ? trimmed : null;
-}
+import { validateExpensePatch } from '@/lib/api/financeValidation';
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
     try {
@@ -26,59 +9,71 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         const adminDb = getAdminDb();
         const body = await req.json();
         const expenseId = params.id;
+        const parsed = validateExpensePatch(body);
 
-        const updateData: Record<string, any> = {};
-        if (body.title !== undefined) updateData.title = body.title;
-        if (body.category !== undefined) updateData.category = body.category;
-        if (body.amount !== undefined) updateData.amount = parseNumber(body.amount);
-        if (body.description !== undefined) updateData.description = body.description || null;
-        if (body.receipt_url !== undefined) updateData.receipt_url = body.receipt_url || null;
-        if (body.expense_date !== undefined) updateData.expense_date = parseDate(body.expense_date);
-        if (body.event_id !== undefined) updateData.event_id = parseOptionalString(body.event_id);
-
-        const now = new Date();
-        updateData.updated_at = now;
+        if (!parsed.ok) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
+        }
 
         const expenseRef = adminDb.collection('expenses').doc(expenseId);
-        const existing = await expenseRef.get();
-        if (!existing.exists) {
-            return NextResponse.json({ error: 'Expense not found.' }, { status: 404 });
-        }
-
-        if (updateData.event_id) {
-            const eventRef = adminDb.collection('events').doc(updateData.event_id);
-            const eventSnap = await eventRef.get();
-            if (!eventSnap.exists) {
-                return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
-            }
-        }
-
-        await expenseRef.update(updateData);
-
-        const txSnap = await adminDb
+        const txQuery = adminDb
             .collection('transactions')
             .where('reference_id', '==', expenseId)
-            .limit(1)
-            .get();
-        if (!txSnap.empty) {
-            const txUpdate: Record<string, any> = { updated_at: now };
-            if (updateData.amount !== undefined) txUpdate.amount = updateData.amount;
-            if (updateData.category) txUpdate.category = updateData.category;
-            await txSnap.docs[0].ref.update(txUpdate);
-        }
+            .limit(1);
+        const auditRef = adminDb.collection('audit_logs').doc();
+        const now = new Date();
 
-        await adminDb.collection('audit_logs').add({
-            action: 'updated_expense',
-            performed_by: admin.uid,
-            entity_type: 'expense',
-            entity_id: expenseId,
-            timestamp: now,
+        await adminDb.runTransaction(async (tx) => {
+            const existing = await tx.get(expenseRef);
+            if (!existing.exists) {
+                throw new Error('NOT_FOUND');
+            }
+
+            if (parsed.data.event_id) {
+                const eventRef = adminDb.collection('events').doc(parsed.data.event_id);
+                const eventSnap = await tx.get(eventRef);
+                if (!eventSnap.exists) {
+                    throw new Error('INVALID_EVENT');
+                }
+            }
+
+            tx.update(expenseRef, { ...parsed.data, updated_at: now });
+
+            if (parsed.data.amount !== undefined || parsed.data.category !== undefined) {
+                const txSnap = await tx.get(txQuery);
+                if (!txSnap.empty) {
+                    const txUpdate: Record<string, unknown> = { updated_at: now };
+                    if (parsed.data.amount !== undefined) txUpdate.amount = parsed.data.amount;
+                    if (parsed.data.category !== undefined) txUpdate.category = parsed.data.category;
+                    tx.update(txSnap.docs[0].ref, txUpdate);
+                }
+            }
+
+            tx.create(auditRef, {
+                action: 'updated_expense',
+                performed_by: admin.uid,
+                entity_type: 'expense',
+                entity_id: expenseId,
+                timestamp: now,
+            });
         });
 
         return NextResponse.json({ ok: true });
-    } catch (error: any) {
-        const status = error.message === 'Forbidden' ? 403 : 401;
-        return NextResponse.json({ error: error.message || 'Unauthorized' }, { status });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unauthorized';
+        if (message === 'NOT_FOUND') {
+            return NextResponse.json({ error: 'Expense not found.' }, { status: 404 });
+        }
+        if (message === 'INVALID_EVENT') {
+            return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
+        }
+        if (message === 'Forbidden') {
+            return NextResponse.json({ error: message }, { status: 403 });
+        }
+        if (message === 'Missing auth token') {
+            return NextResponse.json({ error: message }, { status: 401 });
+        }
+        return NextResponse.json({ error: 'Failed to update expense.' }, { status: 500 });
     }
 }
 
@@ -89,32 +84,47 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         const expenseId = params.id;
 
         const expenseRef = adminDb.collection('expenses').doc(expenseId);
-        const existing = await expenseRef.get();
-        if (!existing.exists) {
-            return NextResponse.json({ error: 'Expense not found.' }, { status: 404 });
-        }
-
-        await expenseRef.delete();
-
-        const txSnap = await adminDb
+        const txQuery = adminDb
             .collection('transactions')
             .where('reference_id', '==', expenseId)
-            .get();
-        for (const doc of txSnap.docs) {
-            await doc.ref.delete();
-        }
+            .limit(25);
+        const auditRef = adminDb.collection('audit_logs').doc();
+        const now = new Date();
 
-        await adminDb.collection('audit_logs').add({
-            action: 'deleted_expense',
-            performed_by: admin.uid,
-            entity_type: 'expense',
-            entity_id: expenseId,
-            timestamp: new Date(),
+        await adminDb.runTransaction(async (tx) => {
+            const existing = await tx.get(expenseRef);
+            if (!existing.exists) {
+                throw new Error('NOT_FOUND');
+            }
+
+            tx.delete(expenseRef);
+
+            const txSnap = await tx.get(txQuery);
+            for (const doc of txSnap.docs) {
+                tx.delete(doc.ref);
+            }
+
+            tx.create(auditRef, {
+                action: 'deleted_expense',
+                performed_by: admin.uid,
+                entity_type: 'expense',
+                entity_id: expenseId,
+                timestamp: now,
+            });
         });
 
         return NextResponse.json({ ok: true });
-    } catch (error: any) {
-        const status = error.message === 'Forbidden' ? 403 : 401;
-        return NextResponse.json({ error: error.message || 'Unauthorized' }, { status });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unauthorized';
+        if (message === 'NOT_FOUND') {
+            return NextResponse.json({ error: 'Expense not found.' }, { status: 404 });
+        }
+        if (message === 'Forbidden') {
+            return NextResponse.json({ error: message }, { status: 403 });
+        }
+        if (message === 'Missing auth token') {
+            return NextResponse.json({ error: message }, { status: 401 });
+        }
+        return NextResponse.json({ error: 'Failed to delete expense.' }, { status: 500 });
     }
 }

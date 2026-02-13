@@ -1,85 +1,69 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { requireAdminOrTreasurer } from '@/lib/firebase/adminAuth';
-
-function parseNumber(value: any, fallback: number | null = null) {
-    if (value === null || value === undefined || value === '') return fallback;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function parseDate(value: any): Date | null {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function parseOptionalString(value: any): string | null {
-    if (typeof value !== 'string') return null;
-    const trimmed = value.trim();
-    return trimmed ? trimmed : null;
-}
+import { validateExpenseCreate } from '@/lib/api/financeValidation';
 
 export async function POST(req: Request) {
     try {
         const admin = await requireAdminOrTreasurer(req.headers.get('authorization'));
         const adminDb = getAdminDb();
         const body = await req.json();
-
-        const title = body.title;
-        const category = body.category;
-        const amount = parseNumber(body.amount);
-        const description = body.description || '';
-        const receiptUrl = body.receipt_url || '';
-        const expenseDate = parseDate(body.expense_date);
-        const eventId = parseOptionalString(body.event_id);
-
-        if (!title || !category || amount === null || !expenseDate) {
-            return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
-        }
-
-        if (eventId) {
-            const eventRef = adminDb.collection('events').doc(eventId);
-            const eventSnap = await eventRef.get();
-            if (!eventSnap.exists) {
-                return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
-            }
+        const parsed = validateExpenseCreate(body);
+        if (!parsed.ok) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
         }
 
         const now = new Date();
-        const expenseRef = await adminDb.collection('expenses').add({
-            title,
-            category,
-            description: description || null,
-            amount,
-            receipt_url: receiptUrl || null,
-            event_id: eventId,
-            expense_date: expenseDate,
-            created_by: admin.uid,
-            created_at: now,
-            updated_at: now,
-        });
+        const expenseRef = adminDb.collection('expenses').doc();
+        const transactionRef = adminDb.collection('transactions').doc();
+        const auditRef = adminDb.collection('audit_logs').doc();
 
-        await adminDb.collection('transactions').add({
-            type: 'expense',
-            category,
-            amount,
-            reference_id: expenseRef.id,
-            created_by: admin.uid,
-            created_at: now,
-        });
+        await adminDb.runTransaction(async (tx) => {
+            if (parsed.data.event_id) {
+                const eventRef = adminDb.collection('events').doc(parsed.data.event_id);
+                const eventSnap = await tx.get(eventRef);
+                if (!eventSnap.exists) {
+                    throw new Error('INVALID_EVENT');
+                }
+            }
 
-        await adminDb.collection('audit_logs').add({
-            action: 'created_expense',
-            performed_by: admin.uid,
-            entity_type: 'expense',
-            entity_id: expenseRef.id,
-            timestamp: now,
+            tx.create(expenseRef, {
+                ...parsed.data,
+                created_by: admin.uid,
+                created_at: now,
+                updated_at: now,
+            });
+
+            tx.create(transactionRef, {
+                type: 'expense',
+                category: parsed.data.category,
+                amount: parsed.data.amount,
+                reference_id: expenseRef.id,
+                created_by: admin.uid,
+                created_at: now,
+            });
+
+            tx.create(auditRef, {
+                action: 'created_expense',
+                performed_by: admin.uid,
+                entity_type: 'expense',
+                entity_id: expenseRef.id,
+                timestamp: now,
+            });
         });
 
         return NextResponse.json({ ok: true, id: expenseRef.id });
-    } catch (error: any) {
-        const status = error.message === 'Forbidden' ? 403 : 401;
-        return NextResponse.json({ error: error.message || 'Unauthorized' }, { status });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'INTERNAL_ERROR';
+        if (message === 'INVALID_EVENT') {
+            return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
+        }
+        if (message === 'Forbidden') {
+            return NextResponse.json({ error: message }, { status: 403 });
+        }
+        if (message === 'Missing auth token') {
+            return NextResponse.json({ error: message }, { status: 401 });
+        }
+        return NextResponse.json({ error: 'Failed to create expense.' }, { status: 500 });
     }
 }

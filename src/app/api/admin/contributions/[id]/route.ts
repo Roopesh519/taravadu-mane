@@ -1,24 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { requireAdminOrTreasurer } from '@/lib/firebase/adminAuth';
-
-function parseNumber(value: any, fallback: number | null = null) {
-    if (value === null || value === undefined || value === '') return fallback;
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function parseDate(value: any): Date | null {
-    if (!value) return null;
-    const date = new Date(value);
-    return Number.isNaN(date.getTime()) ? null : date;
-}
-
-function parseOptionalString(value: any): string | null {
-    if (typeof value !== 'string') return null;
-    const trimmed = value.trim();
-    return trimmed ? trimmed : null;
-}
+import { validateContributionPatch } from '@/lib/api/financeValidation';
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
     try {
@@ -26,69 +9,85 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         const adminDb = getAdminDb();
         const body = await req.json();
         const contributionId = params.id;
+        const parsed = validateContributionPatch(body);
 
-        const updateData: Record<string, any> = {};
-        if (body.user_id) updateData.user_id = body.user_id;
-        if (body.year !== undefined) updateData.year = parseNumber(body.year);
-        if (body.amount !== undefined) updateData.amount = parseNumber(body.amount);
-        if (body.status) updateData.status = body.status;
-        if (body.payment_mode !== undefined) updateData.payment_mode = body.payment_mode || null;
-        if (body.event_id !== undefined) updateData.event_id = parseOptionalString(body.event_id);
-
-        if (body.paid_on !== undefined) {
-            const paidOn = parseDate(body.paid_on);
-            updateData.paid_on = paidOn;
+        if (!parsed.ok) {
+            return NextResponse.json({ error: parsed.error }, { status: 400 });
         }
-
-        if (updateData.status === 'paid' && !updateData.paid_on) {
-            return NextResponse.json({ error: 'Paid contributions must include a paid date.' }, { status: 400 });
-        }
-
-        const now = new Date();
-        updateData.updated_at = now;
 
         const contributionRef = adminDb.collection('contributions').doc(contributionId);
-        const existing = await contributionRef.get();
-        if (!existing.exists) {
-            return NextResponse.json({ error: 'Contribution not found.' }, { status: 404 });
-        }
+        const txQuery = adminDb
+            .collection('transactions')
+            .where('reference_id', '==', contributionId)
+            .limit(1);
+        const auditRef = adminDb.collection('audit_logs').doc();
+        const now = new Date();
 
-        if (updateData.event_id) {
-            const eventRef = adminDb.collection('events').doc(updateData.event_id);
-            const eventSnap = await eventRef.get();
-            if (!eventSnap.exists) {
-                return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
+        await adminDb.runTransaction(async (tx) => {
+            const existing = await tx.get(contributionRef);
+            if (!existing.exists) {
+                throw new Error('NOT_FOUND');
             }
-        }
 
-        await contributionRef.update(updateData);
+            const existingData = existing.data() || {};
+            const mergedStatus = parsed.data.status ?? existingData.status;
+            const mergedPaidOn =
+                parsed.data.paid_on !== undefined
+                    ? parsed.data.paid_on
+                    : (existingData.paid_on ?? null);
 
-        if (updateData.amount !== undefined) {
-            const txSnap = await adminDb
-                .collection('transactions')
-                .where('reference_id', '==', contributionId)
-                .limit(1)
-                .get();
-            if (!txSnap.empty) {
-                await txSnap.docs[0].ref.update({
-                    amount: updateData.amount,
-                    updated_at: now,
-                });
+            if (mergedStatus === 'paid' && !mergedPaidOn) {
+                throw new Error('MISSING_PAID_ON');
             }
-        }
 
-        await adminDb.collection('audit_logs').add({
-            action: 'updated_contribution',
-            performed_by: admin.uid,
-            entity_type: 'contribution',
-            entity_id: contributionId,
-            timestamp: now,
+            if (parsed.data.event_id) {
+                const eventRef = adminDb.collection('events').doc(parsed.data.event_id);
+                const eventSnap = await tx.get(eventRef);
+                if (!eventSnap.exists) {
+                    throw new Error('INVALID_EVENT');
+                }
+            }
+
+            tx.update(contributionRef, { ...parsed.data, updated_at: now });
+
+            if (parsed.data.amount !== undefined) {
+                const txSnap = await tx.get(txQuery);
+                if (!txSnap.empty) {
+                    tx.update(txSnap.docs[0].ref, {
+                        amount: parsed.data.amount,
+                        updated_at: now,
+                    });
+                }
+            }
+
+            tx.create(auditRef, {
+                action: 'updated_contribution',
+                performed_by: admin.uid,
+                entity_type: 'contribution',
+                entity_id: contributionId,
+                timestamp: now,
+            });
         });
 
         return NextResponse.json({ ok: true });
-    } catch (error: any) {
-        const status = error.message === 'Forbidden' ? 403 : 401;
-        return NextResponse.json({ error: error.message || 'Unauthorized' }, { status });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unauthorized';
+        if (message === 'NOT_FOUND') {
+            return NextResponse.json({ error: 'Contribution not found.' }, { status: 404 });
+        }
+        if (message === 'INVALID_EVENT') {
+            return NextResponse.json({ error: 'Selected event was not found.' }, { status: 400 });
+        }
+        if (message === 'MISSING_PAID_ON') {
+            return NextResponse.json({ error: 'Paid contributions must include a paid date.' }, { status: 400 });
+        }
+        if (message === 'Forbidden') {
+            return NextResponse.json({ error: message }, { status: 403 });
+        }
+        if (message === 'Missing auth token') {
+            return NextResponse.json({ error: message }, { status: 401 });
+        }
+        return NextResponse.json({ error: 'Failed to update contribution.' }, { status: 500 });
     }
 }
 
@@ -99,32 +98,47 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         const contributionId = params.id;
 
         const contributionRef = adminDb.collection('contributions').doc(contributionId);
-        const existing = await contributionRef.get();
-        if (!existing.exists) {
-            return NextResponse.json({ error: 'Contribution not found.' }, { status: 404 });
-        }
-
-        await contributionRef.delete();
-
-        const txSnap = await adminDb
+        const txQuery = adminDb
             .collection('transactions')
             .where('reference_id', '==', contributionId)
-            .get();
-        for (const doc of txSnap.docs) {
-            await doc.ref.delete();
-        }
+            .limit(25);
+        const auditRef = adminDb.collection('audit_logs').doc();
+        const now = new Date();
 
-        await adminDb.collection('audit_logs').add({
-            action: 'deleted_contribution',
-            performed_by: admin.uid,
-            entity_type: 'contribution',
-            entity_id: contributionId,
-            timestamp: new Date(),
+        await adminDb.runTransaction(async (tx) => {
+            const existing = await tx.get(contributionRef);
+            if (!existing.exists) {
+                throw new Error('NOT_FOUND');
+            }
+
+            tx.delete(contributionRef);
+
+            const txSnap = await tx.get(txQuery);
+            for (const doc of txSnap.docs) {
+                tx.delete(doc.ref);
+            }
+
+            tx.create(auditRef, {
+                action: 'deleted_contribution',
+                performed_by: admin.uid,
+                entity_type: 'contribution',
+                entity_id: contributionId,
+                timestamp: now,
+            });
         });
 
         return NextResponse.json({ ok: true });
-    } catch (error: any) {
-        const status = error.message === 'Forbidden' ? 403 : 401;
-        return NextResponse.json({ error: error.message || 'Unauthorized' }, { status });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unauthorized';
+        if (message === 'NOT_FOUND') {
+            return NextResponse.json({ error: 'Contribution not found.' }, { status: 404 });
+        }
+        if (message === 'Forbidden') {
+            return NextResponse.json({ error: message }, { status: 403 });
+        }
+        if (message === 'Missing auth token') {
+            return NextResponse.json({ error: message }, { status: 401 });
+        }
+        return NextResponse.json({ error: 'Failed to delete contribution.' }, { status: 500 });
     }
 }

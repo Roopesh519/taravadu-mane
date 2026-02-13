@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { enforceIpRateLimit } from '@/lib/api/rateLimit';
+
+function isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export async function POST(req: Request) {
     try {
@@ -10,10 +15,38 @@ export async function POST(req: Request) {
         if (!name || !email) {
             return NextResponse.json({ error: 'Name and email are required.' }, { status: 400 });
         }
+        if (!isValidEmail(email)) {
+            return NextResponse.json({ error: 'Please provide a valid email address.' }, { status: 400 });
+        }
+        if (name.length > 120) {
+            return NextResponse.json({ error: 'Name is too long.' }, { status: 400 });
+        }
 
         // If user already exists, avoid duplicate access requests.
         const adminAuth = getAdminAuth();
         const adminDb = getAdminDb();
+        const rateLimit = await enforceIpRateLimit({
+            db: adminDb,
+            req,
+            routeKey: 'access_requests:create',
+            maxRequests: 5,
+            windowMs: 60 * 60 * 1000,
+        });
+
+        if (!rateLimit.allowed) {
+            return NextResponse.json(
+                {
+                    error: 'Too many requests. Please try again later.',
+                    retry_after_seconds: rateLimit.retryAfterSeconds,
+                },
+                {
+                    status: 429,
+                    headers: rateLimit.retryAfterSeconds
+                        ? { 'Retry-After': String(rateLimit.retryAfterSeconds) }
+                        : {},
+                }
+            );
+        }
 
         try {
             await adminAuth.getUserByEmail(email);
