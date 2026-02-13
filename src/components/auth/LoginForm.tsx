@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { MessageCircle } from 'lucide-react';
+
+const ADMIN_WHATSAPP_NUMBER = '918495824810';
+const ADMIN_WHATSAPP_TEXT = encodeURIComponent(
+    'Namaskara Admin, I need help with access to the Taravadu Mane Family Portal.'
+);
+const ADMIN_WHATSAPP_URL = `https://wa.me/${ADMIN_WHATSAPP_NUMBER}?text=${ADMIN_WHATSAPP_TEXT}`;
 
 export default function LoginForm() {
     const [email, setEmail] = useState('');
@@ -178,6 +185,21 @@ export default function LoginForm() {
                     <Button type="submit" variant="outline" className="w-full" disabled={requestLoading}>
                         {requestLoading ? 'Submitting...' : 'Request Access'}
                     </Button>
+                    <p className="text-xs text-muted-foreground text-center">
+                        After submitting, an admin will review your request. You will receive an email notification once it's approved.
+                    </p>
+                    <p className="text-s text-muted-foreground text-center">
+                        Or
+                    </p>
+                    <a
+                        href={ADMIN_WHATSAPP_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-emerald-600 bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-700"
+                    >
+                        <MessageCircle className="h-4 w-4" />
+                        Contact Admin on WhatsApp
+                    </a>
                 </form>
             </div>
         </Card>
