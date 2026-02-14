@@ -35,11 +35,21 @@ service cloud.firestore {
           'updated_at'
         ]);
     }
+
+    function isOwnPasswordCompletionUpdate(userId) {
+      return request.auth.uid == userId
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'must_change_password',
+          'updated_at'
+        ])
+        && resource.data.must_change_password == true
+        && request.resource.data.must_change_password == false;
+    }
     
     // Users collection
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow update: if isOwnProfileUpdate(userId) || isAdmin();
+      allow update: if isOwnProfileUpdate(userId) || isOwnPasswordCompletionUpdate(userId) || isAdmin();
       allow create, delete: if isAdmin();
     }
     

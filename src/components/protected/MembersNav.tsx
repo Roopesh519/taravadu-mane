@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import templeLogo from '@/app/temple.png';
@@ -13,10 +14,17 @@ export default function MembersNav() {
     const pathname = usePathname();
     const { user, signOut, hasRole } = useAuth();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [signOutModalOpen, setSignOutModalOpen] = useState(false);
+    const [isSigningOut, setIsSigningOut] = useState(false);
+
     const handleSignOut = async () => {
-        const confirmed = window.confirm('Are you sure you want to sign out?');
-        if (!confirmed) return;
-        await signOut();
+        setIsSigningOut(true);
+        try {
+            await signOut();
+            setSignOutModalOpen(false);
+        } finally {
+            setIsSigningOut(false);
+        }
     };
 
     const navItems = [
@@ -69,7 +77,7 @@ export default function MembersNav() {
                         variant="outline"
                         size="sm"
                         className="hidden lg:inline-flex"
-                        onClick={handleSignOut}
+                        onClick={() => setSignOutModalOpen(true)}
                     >
                         Sign Out
                     </Button>
@@ -106,9 +114,8 @@ export default function MembersNav() {
                             variant="destructive"
                             size="sm"
                             className="w-full justify-start"
-                            onClick={async () => {
-                                await handleSignOut();
-                                setMobileOpen(false);
+                            onClick={() => {
+                                setSignOutModalOpen(true);
                             }}
                         >
                             Sign Out
@@ -116,6 +123,18 @@ export default function MembersNav() {
                     </div>
                 </div>
             )}
+
+            <Modal
+                isOpen={signOutModalOpen}
+                onClose={() => setSignOutModalOpen(false)}
+                onConfirm={handleSignOut}
+                title="Sign Out"
+                description="Are you sure you want to sign out? You will be logged out from your account."
+                confirmText="Sign Out"
+                cancelText="Cancel"
+                variant="destructive"
+                isLoading={isSigningOut}
+            />
         </header>
     );
 }

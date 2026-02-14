@@ -48,11 +48,18 @@ export async function POST(req: Request) {
             );
         }
 
+        // A Firebase Auth record alone is not always a usable portal account.
+        // Treat it as an existing account only when a user profile document also exists.
         try {
-            await adminAuth.getUserByEmail(email);
-            return NextResponse.json({ error: 'An account already exists for this email.' }, { status: 409 });
+            const authUser = await adminAuth.getUserByEmail(email);
+            const existingUserProfile = await adminDb.collection('users').doc(authUser.uid).get();
+            if (existingUserProfile.exists) {
+                return NextResponse.json({ error: 'An account already exists for this email.' }, { status: 409 });
+            }
         } catch (err: any) {
-            // Ignore "user not found" errors
+            if (err?.code !== 'auth/user-not-found') {
+                throw err;
+            }
         }
 
         const existing = await adminDb

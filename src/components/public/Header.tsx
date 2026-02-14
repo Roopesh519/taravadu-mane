@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/button';
+import { Modal } from '@/components/ui/modal';
 import Image from 'next/image';
 import { Menu, X } from 'lucide-react';
 import templeLogo from '@/app/temple.png';
@@ -11,10 +12,17 @@ import templeLogo from '@/app/temple.png';
 export default function PublicHeader() {
     const { user, signOut } = useAuth();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [signOutModalOpen, setSignOutModalOpen] = useState(false);
+    const [isSigningOut, setIsSigningOut] = useState(false);
+
     const handleSignOut = async () => {
-        const confirmed = window.confirm('Are you sure you want to sign out?');
-        if (!confirmed) return;
-        await signOut();
+        setIsSigningOut(true);
+        try {
+            await signOut();
+            setSignOutModalOpen(false);
+        } finally {
+            setIsSigningOut(false);
+        }
     };
 
     return (
@@ -60,7 +68,7 @@ export default function PublicHeader() {
                                 variant="ghost"
                                 size="sm"
                                 className="hidden md:inline-flex"
-                                onClick={handleSignOut}
+                                onClick={() => setSignOutModalOpen(true)}
                             >
                                 Sign Out
                             </Button>
@@ -132,9 +140,8 @@ export default function PublicHeader() {
                                     variant="destructive"
                                     size="sm"
                                     className="w-full justify-start"
-                                    onClick={async () => {
-                                        await handleSignOut();
-                                        setMobileOpen(false);
+                                    onClick={() => {
+                                        setSignOutModalOpen(true);
                                     }}
                                 >
                                     Sign Out
@@ -144,6 +151,18 @@ export default function PublicHeader() {
                     </div>
                 </div>
             )}
+
+            <Modal
+                isOpen={signOutModalOpen}
+                onClose={() => setSignOutModalOpen(false)}
+                onConfirm={handleSignOut}
+                title="Sign Out"
+                description="Are you sure you want to sign out? You will be logged out from your account."
+                confirmText="Sign Out"
+                cancelText="Cancel"
+                variant="destructive"
+                isLoading={isSigningOut}
+            />
         </header>
     );
 }

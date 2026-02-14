@@ -33,23 +33,35 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
             return NextResponse.json({ error: 'Invalid request data.' }, { status: 400 });
         }
 
-        // Ensure user doesn't already exist
-        try {
-            await adminAuth.getUserByEmail(email);
-            return NextResponse.json(
-                { error: 'An account already exists for this email.' },
-                { status: 409 }
-            );
-        } catch (err: any) {
-            // Continue if user not found
-        }
-
         const tempPassword = generateTempPassword();
-        const userRecord = await adminAuth.createUser({
-            email,
-            password: tempPassword,
-            displayName: name,
-        });
+
+        let userRecord;
+        try {
+            const existingAuthUser = await adminAuth.getUserByEmail(email);
+            const existingUserProfile = await adminDb.collection('users').doc(existingAuthUser.uid).get();
+
+            if (existingUserProfile.exists) {
+                return NextResponse.json(
+                    { error: 'An account already exists for this email.' },
+                    { status: 409 }
+                );
+            }
+
+            userRecord = await adminAuth.updateUser(existingAuthUser.uid, {
+                password: tempPassword,
+                displayName: name,
+            });
+        } catch (err: any) {
+            if (err?.code !== 'auth/user-not-found') {
+                throw err;
+            }
+
+            userRecord = await adminAuth.createUser({
+                email,
+                password: tempPassword,
+                displayName: name,
+            });
+        }
 
         const userRef = adminDb.collection('users').doc(userRecord.uid);
         const existingUser = await userRef.get();
