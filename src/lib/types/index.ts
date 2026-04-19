@@ -113,6 +113,27 @@ export interface AccessRequest {
     denied_by?: string;
 }
 
+export interface NoteChecklistItem {
+    id: string;
+    text: string;
+    checked: boolean;
+}
+
+export interface Note {
+    id: string;
+    title?: string;
+    content?: string;
+    color?: 'default' | 'sun' | 'mint' | 'sky' | 'blush' | 'lavender';
+    pinned?: boolean;
+    archived?: boolean;
+    labels?: string[];
+    checklist?: NoteChecklistItem[];
+    collaborator_ids?: string[];
+    created_by: string;
+    created_at?: Date;
+    updated_at?: Date;
+}
+
 export interface GalleryPhoto {
     id: string;
     title: string;

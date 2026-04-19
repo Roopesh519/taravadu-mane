@@ -30,6 +30,7 @@ export default function MembersNav() {
     const navItems = [
         { name: 'Dashboard', href: '/dashboard' },
         { name: 'Announcements', href: '/announcements' },
+        { name: 'Notes', href: '/notes' },
         { name: 'Events', href: '/events' },
         { name: 'Contributions', href: '/contributions' },
         { name: 'Expenses', href: '/expenses' },

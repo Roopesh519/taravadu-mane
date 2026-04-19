@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import MembersNav from '@/components/protected/MembersNav';
-import { Bell, CalendarDays, FolderOpen, ReceiptText, User, Users, Wallet } from 'lucide-react';
+import { Bell, CalendarDays, FolderOpen, ReceiptText, ScrollText, User, Users, Wallet } from 'lucide-react';
 import { getDocuments, getRecentAnnouncements, getUpcomingEvents } from '@/lib/firebase/db';
 import { Announcement, Event } from '@/lib/types';
 import { orderBy, Timestamp, where } from 'firebase/firestore';
@@ -252,6 +252,13 @@ export default function DashboardPage() {
                                     View Documents
                                 </p>
                                 <p className="text-sm text-muted-foreground">Access family documents</p>
+                            </Link>
+                            <Link href="/notes" className="block p-3 rounded-md hover:bg-muted transition-colors">
+                                <p className="font-medium flex items-center gap-2">
+                                    <ScrollText className="h-4 w-4 text-primary" />
+                                    Family Notes
+                                </p>
+                                <p className="text-sm text-muted-foreground">See pinned reminders and shared updates</p>
                             </Link>
                             <Link href="/directory" className="block p-3 rounded-md hover:bg-muted transition-colors">
                                 <p className="font-medium flex items-center gap-2">
