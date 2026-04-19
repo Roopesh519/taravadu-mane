@@ -53,6 +53,31 @@ function signParams(params: Record<string, string>, apiSecret: string) {
     return createHash('sha1').update(`${serialized}${apiSecret}`).digest('hex');
 }
 
+async function callCloudinaryApi<T>(path: string, form: FormData): Promise<T> {
+    const { cloudName } = parseCloudinaryUrl();
+
+    let response: Response;
+    try {
+        response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/${path}`, {
+            method: 'POST',
+            body: form,
+        });
+    } catch (error: any) {
+        const message = String(error?.message || 'Cloudinary request failed');
+        const isNetworkError = /(ENETUNREACH|ETIMEDOUT|ECONNRESET|EAI_AGAIN|ENOTFOUND)/i.test(message);
+        const code = isNetworkError ? 'CLOUDINARY_NETWORK_ERROR' : 'CLOUDINARY_REQUEST_ERROR';
+        throw new Error(`${code}:${message}`);
+    }
+
+    const payload = await response.json();
+
+    if (!response.ok) {
+        throw new Error(`CLOUDINARY_UPLOAD_ERROR:${payload?.error?.message || 'Cloudinary request failed'}`);
+    }
+
+    return payload;
+}
+
 export async function uploadGalleryImage(options: {
     bytes: Uint8Array;
     fileName: string;
@@ -79,25 +104,7 @@ export async function uploadGalleryImage(options: {
     form.append('folder', uploadParams.folder);
     form.append('transformation', uploadParams.transformation);
     form.append('signature', signature);
-
-    let response: Response;
-    try {
-        response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-            method: 'POST',
-            body: form,
-        });
-    } catch (error: any) {
-        const message = String(error?.message || 'Cloudinary request failed');
-        const isNetworkError = /(ENETUNREACH|ETIMEDOUT|ECONNRESET|EAI_AGAIN|ENOTFOUND)/i.test(message);
-        const code = isNetworkError ? 'CLOUDINARY_NETWORK_ERROR' : 'CLOUDINARY_REQUEST_ERROR';
-        throw new Error(`${code}:${message}`);
-    }
-
-    const payload = await response.json();
-
-    if (!response.ok) {
-        throw new Error(`CLOUDINARY_UPLOAD_ERROR:${payload?.error?.message || 'Cloudinary upload failed'}`);
-    }
+    const payload = await callCloudinaryApi<any>('image/upload', form);
 
     return {
         secureUrl: payload.secure_url,
@@ -107,4 +114,30 @@ export async function uploadGalleryImage(options: {
         bytes: payload.bytes,
         format: payload.format,
     };
+}
+
+export async function deleteGalleryImage(publicId: string) {
+    if (!publicId) {
+        throw new Error('CLOUDINARY_UPLOAD_ERROR:Missing Cloudinary public ID');
+    }
+
+    const { apiKey, apiSecret } = parseCloudinaryUrl();
+    const timestamp = Math.floor(Date.now() / 1000).toString();
+    const destroyParams = {
+        public_id: publicId,
+        timestamp,
+    };
+
+    const form = new FormData();
+    form.append('public_id', publicId);
+    form.append('api_key', apiKey);
+    form.append('timestamp', timestamp);
+    form.append('signature', signParams(destroyParams, apiSecret));
+
+    const payload = await callCloudinaryApi<any>('image/destroy', form);
+    const result = String(payload?.result || '').toLowerCase();
+
+    if (result !== 'ok' && result !== 'not found') {
+        throw new Error(`CLOUDINARY_UPLOAD_ERROR:Cloudinary destroy failed with result "${payload?.result || 'unknown'}"`);
+    }
 }
